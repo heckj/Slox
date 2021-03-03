@@ -26,6 +26,7 @@
 /* Begin PBXFileReference section */
 		1A4DD44425EF0D79008D500A /* Slox */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Slox; sourceTree = BUILT_PRODUCTS_DIR; };
 		1A4DD44725EF0D79008D500A /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		1A6417E825EF1FC500A7FABD /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		1A94F1AC25EF0DDF00841C87 /* Lox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lox.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -43,6 +44,7 @@
 		1A4DD43B25EF0D78008D500A = {
 			isa = PBXGroup;
 			children = (
+				1A6417E825EF1FC500A7FABD /* README.md */,
 				1A4DD44625EF0D79008D500A /* Slox */,
 				1A4DD44525EF0D79008D500A /* Products */,
 			);
@@ -72,6 +74,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1A4DD44B25EF0D79008D500A /* Build configuration list for PBXNativeTarget "Slox" */;
 			buildPhases = (
+				1A6417EA25EF212700A7FABD /* Run Script (swiftformat) */,
 				1A4DD44025EF0D79008D500A /* Sources */,
 				1A4DD44125EF0D79008D500A /* Frameworks */,
 				1A4DD44225EF0D79008D500A /* CopyFiles */,
@@ -116,6 +119,27 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1A6417EA25EF212700A7FABD /* Run Script (swiftformat) */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Run Script (swiftformat)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd BuildTools\nSDKROOT=macosx\n# swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat \"$SRCROOT\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1A4DD44025EF0D79008D500A /* Sources */ = {
