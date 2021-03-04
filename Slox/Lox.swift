@@ -57,12 +57,14 @@ final class Scanner {
     var source: String
     var tokens: [Token] = []
 
-    private var start: Int = 0
-    private var current: Int = 0
+    private var start: String.Index
+    private var current: String.Index
     private var line: Int = 1
 
     init(_ source: String) {
         self.source = source
+        start = source.startIndex
+        current = start
     }
 
     func scanTokens() -> [Token] {
@@ -74,9 +76,58 @@ final class Scanner {
         tokens.append(Token(type: .EOF, lexeme: "", literal: "", line: line))
         return tokens
     }
-    
+
     private func isAtEnd() -> Bool {
-        return current >= source.count
+        return current >= source.endIndex
+    }
+
+    private func advance() -> Character {
+        let nextIndexPosition = source.index(after: current)
+        current = nextIndexPosition
+        let char: Character = source[current]
+        return char
+    }
+
+    private func scanToken() {
+        let char: Character = advance()
+        switch char {
+        case "(": addToken(.LEFT_PAREN)
+        case ")": addToken(.RIGHT_PAREN)
+        case "{": addToken(.LEFT_BRACE)
+        case "}": addToken(.RIGHT_BRACE)
+        case ",": addToken(.COMMA)
+        case ".": addToken(.DOT)
+        case "-": addToken(.MINUS)
+        case "+": addToken(.PLUS)
+        case ";": addToken(.SEMICOLON)
+        case "*": addToken(.STAR)
+        case "!": addToken(match("=") ? .BANG_EQUAL : .BANG)
+        case "=": addToken(match("=") ? .EQUAL_EQUAL : .EQUAL)
+        case "<": addToken(match("=") ? .LESS_EQUAL : .LESS)
+        case ">": addToken(match("=") ? .GREATER_EQUAL : .GREATER)
+
+        default:
+            Lox.error(line, message: "Unexpected character.")
+        }
+    }
+
+    private func addToken(_ type: Token.TokenType) {
+        addToken(type, literal: "")
+    }
+
+    private func addToken(_ type: Token.TokenType, literal: String) {
+        let text = source[start ... current]
+        tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
+    }
+
+    private func match(_ expected: Character) -> Bool {
+        if isAtEnd() {
+            return false
+        }
+        if source[current] != expected { return false }
+        // it matches, so advance the index position
+        current = source.index(after: current)
+        return true
     }
 }
 
