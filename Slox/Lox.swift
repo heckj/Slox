@@ -8,6 +8,8 @@
 import Darwin
 import Foundation
 
+// translated through https://craftinginterpreters.com/scanning.html#longer-lexemes (Section 4.6)
+
 final class Token: CustomStringConvertible {
     let type: TokenType
     let lexeme: String
@@ -144,11 +146,7 @@ public enum Lox {
         }
     }
 
-    // translated through https://craftinginterpreters.com/scanning.html#token-type
-
     static func runFile(_ path: String) throws {
-//        byte[] bytes = Files.readAllBytes(Paths.get(path));
-//        run(new String(bytes, Charset.defaultCharset()));
         let contents = try String(contentsOfFile: path, encoding: .utf8)
         run(contents)
         if hadError {
@@ -157,15 +155,6 @@ public enum Lox {
     }
 
     static func runPrompt() throws {
-//        InputStreamReader input = new InputStreamReader(System.in);
-//        BufferedReader reader = new BufferedReader(input);
-//
-//        for (;;) {
-//          System.out.print("> ");
-//          String line = reader.readLine();
-//          if (line == null) break;
-//          run(line);
-//        }
         while true {
             print("> ", terminator: "")
             if let interactiveString = readLine(strippingNewline: true) {
@@ -176,12 +165,6 @@ public enum Lox {
     }
 
     static func run(_ source: String) {
-//        List<Token> tokens = scanner.scanTokens();
-//
-//        // For now, just print the tokens.
-//        for (Token token : tokens) {
-//          System.out.println(token);
-//        }
         let tokenlist = source.components(separatedBy: .whitespacesAndNewlines)
         for token in tokenlist {
             print(token)
