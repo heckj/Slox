@@ -53,6 +53,33 @@ final class Token: CustomStringConvertible {
     }
 }
 
+final class Scanner {
+    var source: String
+    var tokens: [Token] = []
+
+    private var start: Int = 0
+    private var current: Int = 0
+    private var line: Int = 1
+
+    init(_ source: String) {
+        self.source = source
+    }
+
+    func scanTokens() -> [Token] {
+        while !isAtEnd() {
+            start = current
+            scanToken()
+        }
+
+        tokens.append(Token(type: .EOF, lexeme: "", literal: "", line: line))
+        return tokens
+    }
+    
+    private func isAtEnd() -> Bool {
+        return current >= source.count
+    }
+}
+
 public enum Lox {
     static var hadError: Bool = false
     public static func main(args: [String]) throws {
