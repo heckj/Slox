@@ -97,6 +97,22 @@ final class Scanner {
         return source[current]
     }
 
+    private func string() {
+        while peek() != "\"", !isAtEnd() {
+            if peek() == "\n" { line += 1 }
+            _ = advance()
+        }
+        if isAtEnd() {
+            Lox.error(line, message: "Unterminated string.")
+            return
+        }
+
+        // The closing " character
+        _ = advance()
+        let value = source[source.index(after: start) ... source.index(before: current)]
+        addToken(.STRING, literal: String(value))
+    }
+
     private func scanToken() {
         let char: Character = advance()
         switch char {
@@ -123,7 +139,8 @@ final class Scanner {
                 addToken(.SLASH)
             }
         case " ", "\r", "\t": break
-        case "\n": line+=1
+        case "\n": line += 1
+        case "\"": string()
         default:
             Lox.error(line, message: "Unexpected character.")
         }
