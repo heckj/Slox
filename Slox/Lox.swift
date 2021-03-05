@@ -90,6 +90,13 @@ final class Scanner {
         return char
     }
 
+    private func peek() -> Character {
+        if isAtEnd() {
+            return "\0" // unicode NUL character
+        }
+        return source[current]
+    }
+
     private func scanToken() {
         let char: Character = advance()
         switch char {
@@ -107,7 +114,16 @@ final class Scanner {
         case "=": addToken(match("=") ? .EQUAL_EQUAL : .EQUAL)
         case "<": addToken(match("=") ? .LESS_EQUAL : .LESS)
         case ">": addToken(match("=") ? .GREATER_EQUAL : .GREATER)
-
+        case "/": if match("/") {
+                // represents a comment - ignored content until the end of the line
+                while (!peek().isNewline) && !isAtEnd() {
+                    _ = advance()
+                }
+            } else {
+                addToken(.SLASH)
+            }
+        case " ", "\r", "\t": break
+        case "\n": line+=1
         default:
             Lox.error(line, message: "Unexpected character.")
         }
