@@ -66,6 +66,7 @@ enum LiteralType {
     // into an enumeration itself.
     case string(value: String)
     case number(value: Double)
+    case none
 }
 
 final class Token: CustomStringConvertible {
@@ -79,6 +80,8 @@ final class Token: CustomStringConvertible {
             return "\(type) \(lexeme) \(value)"
         case let .string(value):
             return "\(type) \(lexeme) \(value)"
+        case .none:
+            return "\(type) \(lexeme)"
         }
     }
 
@@ -93,6 +96,13 @@ final class Token: CustomStringConvertible {
         self.type = type
         self.lexeme = lexeme
         self.literal = LiteralType.number(value: literal)
+        self.line = line
+    }
+
+    init(type: TokenType, lexeme: String, line: Int) {
+        self.type = type
+        self.lexeme = lexeme
+        literal = LiteralType.none
         self.line = line
     }
 }
@@ -117,7 +127,7 @@ final class Scanner {
             scanToken()
         }
 
-        tokens.append(Token(type: .EOF, lexeme: "", literal: "", line: line))
+        tokens.append(Token(type: .EOF, lexeme: "", line: line))
         return tokens
     }
 
@@ -237,7 +247,8 @@ final class Scanner {
     }
 
     private func addToken(_ type: TokenType) {
-        addToken(type, literal: "")
+        let text = source[start ... current]
+        tokens.append(Token(type: type, lexeme: String(text), line: line))
     }
 
     private func addToken(_ type: TokenType, literal: String) {
@@ -277,11 +288,11 @@ final class Scanner {
  */
 
 // from TSPL LanguageGuide
-//indirect enum ArithmeticExpression {
+// indirect enum ArithmeticExpression {
 //    case number(Int)
 //    case addition(ArithmeticExpression, ArithmeticExpression)
 //    case multiplication(ArithmeticExpression, ArithmeticExpression)
-//}
+// }
 
 // AST Classes ??? Maybe - translating the Java examples of abstract and final classes with a visitor
 // pattern into recursive enumerations in Swift, which smell like they're built for exactly
@@ -295,64 +306,64 @@ final class Scanner {
 // does this with a printing-the-AST/tokens thing
 
 /*
- let x = Expression.binary(Expression.Unary(),Expression.literal(.number(Token("12")))
- public static void main(String[] args) {
-     Expr expression = new Expr.Binary(
-         new Expr.Unary(
-             new Token(TokenType.MINUS, "-", null, 1),
-             new Expr.Literal(123)),
-         new Token(TokenType.STAR, "*", null, 1),
-         new Expr.Grouping(
-             new Expr.Literal(45.67)));
+  let x = Expression.binary(Expression.Unary(),Expression.literal(.number(Token("12")))
+  public static void main(String[] args) {
+      Expr expression = new Expr.Binary(
+          new Expr.Unary(
+              new Token(TokenType.MINUS, "-", null, 1),
+              new Expr.Literal(123)),
+          new Token(TokenType.STAR, "*", null, 1),
+          new Expr.Grouping(
+              new Expr.Literal(45.67)));
 
-     System.out.println(new AstPrinter().print(expression));
-   }
- 
---- GENERATING:
- 
- (* (- 123) (group 45.67))
- 
---- USING ::
- 
- class AstPrinter implements Expr.Visitor<String> {
-   String print(Expr expr) {
-     return expr.accept(this);
-   }
- }
- @Override
-   public String visitBinaryExpr(Expr.Binary expr) {
-     return parenthesize(expr.operator.lexeme,
-                         expr.left, expr.right);
-   }
+      System.out.println(new AstPrinter().print(expression));
+    }
 
-   @Override
-   public String visitGroupingExpr(Expr.Grouping expr) {
-     return parenthesize("group", expr.expression);
-   }
+ --- GENERATING:
 
-   @Override
-   public String visitLiteralExpr(Expr.Literal expr) {
-     if (expr.value == null) return "nil";
-     return expr.value.toString();
-   }
+  (* (- 123) (group 45.67))
 
-   @Override
-   public String visitUnaryExpr(Expr.Unary expr) {
-     return parenthesize(expr.operator.lexeme, expr.right);
-   }
- private String parenthesize(String name, Expr... exprs) {
-     StringBuilder builder = new StringBuilder();
+ --- USING ::
 
-     builder.append("(").append(name);
-     for (Expr expr : exprs) {
-       builder.append(" ");
-       builder.append(expr.accept(this));
-     }
-     builder.append(")");
+  class AstPrinter implements Expr.Visitor<String> {
+    String print(Expr expr) {
+      return expr.accept(this);
+    }
+  }
+  @Override
+    public String visitBinaryExpr(Expr.Binary expr) {
+      return parenthesize(expr.operator.lexeme,
+                          expr.left, expr.right);
+    }
 
-     return builder.toString();
-   }
- */
+    @Override
+    public String visitGroupingExpr(Expr.Grouping expr) {
+      return parenthesize("group", expr.expression);
+    }
+
+    @Override
+    public String visitLiteralExpr(Expr.Literal expr) {
+      if (expr.value == null) return "nil";
+      return expr.value.toString();
+    }
+
+    @Override
+    public String visitUnaryExpr(Expr.Unary expr) {
+      return parenthesize(expr.operator.lexeme, expr.right);
+    }
+  private String parenthesize(String name, Expr... exprs) {
+      StringBuilder builder = new StringBuilder();
+
+      builder.append("(").append(name);
+      for (Expr expr : exprs) {
+        builder.append(" ");
+        builder.append(expr.accept(this));
+      }
+      builder.append(")");
+
+      return builder.toString();
+    }
+  */
 
 indirect enum Expression {
     case literal(LiteralExpression)
@@ -360,6 +371,7 @@ indirect enum Expression {
     case binary(Expression, OperatorExpression, Expression)
     case grouping(Expression)
 }
+
 indirect enum LiteralExpression {
     case number(Token)
     case string(Token)
@@ -367,10 +379,12 @@ indirect enum LiteralExpression {
     case falseToken(Token)
     case nilToken(Token)
 }
+
 indirect enum UnaryType {
     case minus(Token)
     case not(Token)
 }
+
 indirect enum OperatorExpression {
     case Equals(Token)
     case NotEquals(Token)
@@ -383,6 +397,29 @@ indirect enum OperatorExpression {
     case Multiply(Token)
     case Divide(Token)
 }
+
+let x = Expression.unary(
+    .minus(Token(type: .MINUS, lexeme: "-", literal: "-", line: 1)),
+    Expression.literal(.number(Token(type: .NUMBER, lexeme: "123", literal: 123, line: 1)))
+)
+/*
+
+  public static void main(String[] args) {
+      Expr expression = new Expr.Binary(
+          new Expr.Unary(
+              new Token(TokenType.MINUS, "-", null, 1),
+              new Expr.Literal(123)),
+          new Token(TokenType.STAR, "*", null, 1),
+          new Expr.Grouping(
+              new Expr.Literal(45.67)));
+
+      System.out.println(new AstPrinter().print(expression));
+    }
+
+ --- GENERATING:
+
+  (* (- 123) (group 45.67))
+ */
 
 public enum Lox {
     static var hadError: Bool = false
