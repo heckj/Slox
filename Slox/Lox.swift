@@ -60,34 +60,39 @@ let reservedWords: [String: TokenType] = ["and": TokenType.AND,
                                           "true": TokenType.TRUE,
                                           "var": TokenType.VAR,
                                           "while": TokenType.WHILE]
+enum LiteralType {
+    // The rough equivalent of a Union for swift - a literal is one of these kinds of things,
+    // but I didn't want to store each option in the Token class directly, nor make the Token class
+    // into an enumeration itself.
+    case string(value: String)
+    case number(value: Double)
+}
 
 final class Token: CustomStringConvertible {
     let type: TokenType
     let lexeme: String
-    let literal_string: String? // could be a String or it could be a Double
-    let literal_double: Double? // could be a String or it could be a Double
+    let literal: LiteralType
     let line: Int
     var description: String {
-        if literal_string != nil {
-            return "\(type) \(lexeme) \(literal_string ?? "")"
-        } else {
-            return "\(type) \(lexeme) \(literal_double ?? 0.0)"
+        switch literal {
+        case let .number(value):
+            return "\(type) \(lexeme) \(value)"
+        case let .string(value):
+            return "\(type) \(lexeme) \(value)"
         }
     }
 
     init(type: TokenType, lexeme: String, literal: String, line: Int) {
         self.type = type
         self.lexeme = lexeme
-        literal_string = literal
-        literal_double = nil
+        self.literal = LiteralType.string(value: literal)
         self.line = line
     }
 
     init(type: TokenType, lexeme: String, literal: Double, line: Int) {
         self.type = type
         self.lexeme = lexeme
-        literal_double = literal
-        literal_string = nil
+        self.literal = LiteralType.number(value: literal)
         self.line = line
     }
 }
