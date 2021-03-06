@@ -10,6 +10,57 @@ import Foundation
 
 // translated through https://craftinginterpreters.com/scanning.html#longer-lexemes (Section 4.6)
 
+extension Character {
+    var isIdentifier: Bool {
+        return isLetter || self == "_"
+    }
+}
+
+enum TokenType {
+    // single-character tokens
+    case LEFT_PAREN, RIGHT_PAREN
+    case LEFT_BRACE, RIGHT_BRACE
+    case COMMA
+    case DOT
+    case MINUS
+    case PLUS
+    case SEMICOLON
+    case SLASH
+    case STAR
+
+    // one or two-character tokens
+    case BANG, BANG_EQUAL
+    case EQUAL, EQUAL_EQUAL
+    case GREATER, GREATER_EQUAL
+    case LESS, LESS_EQUAL
+
+    // Literals
+    case IDENTIFIER, STRING, NUMBER
+
+    // Keywords
+    case AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL
+    case OR, PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE
+
+    case EOF
+}
+
+let reservedWords: [String: TokenType] = ["and": TokenType.AND,
+                                          "class": TokenType.CLASS,
+                                          "else": TokenType.ELSE,
+                                          "false": TokenType.FALSE,
+                                          "for": TokenType.FOR,
+                                          "fun": TokenType.FUN,
+                                          "if": TokenType.IF,
+                                          "nil": TokenType.NIL,
+                                          "or": TokenType.OR,
+                                          "print": TokenType.PRINT,
+                                          "return": TokenType.RETURN,
+                                          "super": TokenType.SUPER,
+                                          "this": TokenType.THIS,
+                                          "true": TokenType.TRUE,
+                                          "var": TokenType.VAR,
+                                          "while": TokenType.WHILE]
+
 final class Token: CustomStringConvertible {
     let type: TokenType
     let lexeme: String
@@ -38,34 +89,6 @@ final class Token: CustomStringConvertible {
         literal_double = literal
         literal_string = nil
         self.line = line
-    }
-
-    enum TokenType {
-        // single-character tokens
-        case LEFT_PAREN, RIGHT_PAREN
-        case LEFT_BRACE, RIGHT_BRACE
-        case COMMA
-        case DOT
-        case MINUS
-        case PLUS
-        case SEMICOLON
-        case SLASH
-        case STAR
-
-        // one or two-character tokens
-        case BANG, BANG_EQUAL
-        case EQUAL, EQUAL_EQUAL
-        case GREATER, GREATER_EQUAL
-        case LESS, LESS_EQUAL
-
-        // Literals
-        case IDENTIFIER, STRING, NUMBER
-
-        // Keywords
-        case AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL
-        case OR, PRINT, RETURN, SUPER, THIS, TRUE, VAR, WHILE
-
-        case EOF
     }
 }
 
@@ -135,7 +158,7 @@ final class Scanner {
         // The closing " character
         _ = advance()
         let value = source[source.index(after: start) ... source.index(before: current)]
-        addToken(.STRING, literal: String(value))
+        addToken(TokenType.STRING, literal: String(value))
     }
 
     private func number() {
@@ -154,7 +177,19 @@ final class Scanner {
             Lox.error(line, message: "Unexpected error parsing a number from \(source[start ... current]).")
             return
         }
-        addToken(.NUMBER, literal: value)
+        addToken(TokenType.NUMBER, literal: value)
+    }
+
+    private func identifier() {
+        // increment the cursor to find the bounds of the identifier
+        while peek().isIdentifier {
+            _ = advance()
+        }
+        let text = source[start ... current]
+        if let type = reservedWords[String(text)] {
+            addToken(type)
+        }
+        addToken(.IDENTIFIER)
     }
 
     private func scanToken() {
@@ -188,22 +223,24 @@ final class Scanner {
         default:
             if char.isNumber {
                 number()
+            } else if char.isLetter {
+                identifier()
             } else {
                 Lox.error(line, message: "Unexpected character.")
             }
         }
     }
 
-    private func addToken(_ type: Token.TokenType) {
+    private func addToken(_ type: TokenType) {
         addToken(type, literal: "")
     }
 
-    private func addToken(_ type: Token.TokenType, literal: String) {
+    private func addToken(_ type: TokenType, literal: String) {
         let text = source[start ... current]
         tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
     }
 
-    private func addToken(_ type: Token.TokenType, literal: Double) {
+    private func addToken(_ type: TokenType, literal: Double) {
         let text = source[start ... current]
         tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
     }
