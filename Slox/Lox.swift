@@ -13,16 +13,30 @@ import Foundation
 final class Token: CustomStringConvertible {
     let type: TokenType
     let lexeme: String
-    let literal: String // AnyObject?
+    let literal_string: String? // could be a String or it could be a Double
+    let literal_double: Double? // could be a String or it could be a Double
     let line: Int
     var description: String {
-        return "\(type) \(lexeme) \(literal)"
+        if literal_string != nil {
+            return "\(type) \(lexeme) \(literal_string ?? "")"
+        } else {
+            return "\(type) \(lexeme) \(literal_double ?? 0.0)"
+        }
     }
 
     init(type: TokenType, lexeme: String, literal: String, line: Int) {
         self.type = type
         self.lexeme = lexeme
-        self.literal = literal
+        literal_string = literal
+        literal_double = nil
+        self.line = line
+    }
+
+    init(type: TokenType, lexeme: String, literal: Double, line: Int) {
+        self.type = type
+        self.lexeme = lexeme
+        literal_double = literal
+        literal_string = nil
         self.line = line
     }
 
@@ -91,13 +105,24 @@ final class Scanner {
     }
 
     private func peek() -> Character {
+        // single character "look ahead" function
         if isAtEnd() {
             return "\0" // unicode NUL character
         }
         return source[current]
     }
 
+    private func peekNext() -> Character {
+        // double character "look ahead" function
+        let nextIndex: String.Index = source.index(after: current)
+        if isAtEnd() || (nextIndex >= source.endIndex) {
+            return "\0" // unicode NUL character
+        }
+        return source[nextIndex]
+    }
+
     private func string() {
+        // increment the cursor to find the bounds of the string
         while peek() != "\"", !isAtEnd() {
             if peek() == "\n" { line += 1 }
             _ = advance()
@@ -111,6 +136,25 @@ final class Scanner {
         _ = advance()
         let value = source[source.index(after: start) ... source.index(before: current)]
         addToken(.STRING, literal: String(value))
+    }
+
+    private func number() {
+        // increment the cursor to find the bounds of the number
+        while peek().isNumber {
+            _ = advance()
+        }
+        if (peek() == ".") && peekNext().isNumber {
+            // Consume the '.'
+            _ = advance()
+            while peek().isNumber {
+                _ = advance()
+            }
+        }
+        guard let value = Double(source[start ... current]) else {
+            Lox.error(line, message: "Unexpected error parsing a number from \(source[start ... current]).")
+            return
+        }
+        addToken(.NUMBER, literal: value)
     }
 
     private func scanToken() {
@@ -142,7 +186,11 @@ final class Scanner {
         case "\n": line += 1
         case "\"": string()
         default:
-            Lox.error(line, message: "Unexpected character.")
+            if char.isNumber {
+                number()
+            } else {
+                Lox.error(line, message: "Unexpected character.")
+            }
         }
     }
 
@@ -151,6 +199,11 @@ final class Scanner {
     }
 
     private func addToken(_ type: Token.TokenType, literal: String) {
+        let text = source[start ... current]
+        tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
+    }
+
+    private func addToken(_ type: Token.TokenType, literal: Double) {
         let text = source[start ... current]
         tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
     }
