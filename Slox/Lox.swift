@@ -365,27 +365,89 @@ final class Scanner {
     }
   */
 
-indirect enum Expression {
+indirect enum Expression: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case let .literal(exp):
+            return "\(exp)"
+        case let .unary(type, exp):
+            return "\(type)\(exp)"
+        case let .binary(lhs, op, rhs):
+            return "\(lhs) \(op) \(rhs)"
+        case let .grouping(exp):
+            return "( \(exp) )"
+        }
+    }
+
     case literal(LiteralExpression)
     case unary(UnaryType, Expression)
     case binary(Expression, OperatorExpression, Expression)
     case grouping(Expression)
 }
 
-indirect enum LiteralExpression {
-    case number(Token)
-    case string(Token)
+indirect enum LiteralExpression: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case let .number(value):
+            return "\(value)"
+        case let .string(value):
+            return "\(value)"
+        case .trueToken:
+            return "true"
+        case .falseToken:
+            return "false"
+        case .nilToken:
+            return "nil"
+        }
+    }
+
+    case number(Token) // double rather than token?
+    case string(Token) // string rather than token?
     case trueToken(Token)
     case falseToken(Token)
     case nilToken(Token)
 }
 
-indirect enum UnaryType {
+indirect enum UnaryType: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .minus:
+            return "-"
+        case .not:
+            return "!"
+        }
+    }
+
     case minus(Token)
     case not(Token)
 }
 
-indirect enum OperatorExpression {
+indirect enum OperatorExpression: CustomStringConvertible {
+    var description: String {
+        switch self {
+        case .Equals:
+            return "="
+        case .NotEquals:
+            return "!="
+        case .LessThan:
+            return "<"
+        case .LessThanOrEqual:
+            return "<="
+        case .GreaterThan:
+            return ">"
+        case .GreaterThanOrEqual:
+            return ">="
+        case .Add:
+            return "+"
+        case .Subtract:
+            return "-"
+        case .Multiply:
+            return "*"
+        case .Divide:
+            return "/"
+        }
+    }
+
     case Equals(Token)
     case NotEquals(Token)
     case LessThan(Token)
@@ -398,12 +460,27 @@ indirect enum OperatorExpression {
     case Divide(Token)
 }
 
-let x = Expression.unary(
-    .minus(Token(type: .MINUS, lexeme: "-", literal: "-", line: 1)),
-    Expression.literal(.number(Token(type: .NUMBER, lexeme: "123", literal: 123, line: 1)))
+// translated example code, with every AST node having a copy of the token that generated it...
+// The more direct example allowed for a Token to be inserted for Operator from the Java code,
+// but it's not clear how the underlying data in the AST is used, so I'm hesitant to separate that.
+// Otherwise, I think a lot of the tokens could be horribly redundant, and you end up mapping tokens
+// into an AST that just includes them.
+
+let expression = Expression.binary(
+    Expression.unary(
+        .minus(Token(type: .MINUS, lexeme: "-", literal: "-", line: 1)),
+        Expression.literal(.number(Token(type: .NUMBER, lexeme: "123", literal: 123, line: 1)))
+    ),
+    .Multiply(Token(type: .STAR, lexeme: "*", line: 1)),
+    Expression.grouping(
+        Expression.literal(
+            .number(
+                Token(type: .NUMBER, lexeme: "45.67", literal: 45.67, line: 1)
+            )
+        )
+    )
 )
 /*
-
   public static void main(String[] args) {
       Expr expression = new Expr.Binary(
           new Expr.Unary(
