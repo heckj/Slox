@@ -261,6 +261,129 @@ final class Scanner {
     }
 }
 
+/*
+ LOX grammar
+ expression     → literal
+                | unary
+                | binary
+                | grouping ;
+
+ literal        → NUMBER | STRING | "true" | "false" | "nil" ;
+ grouping       → "(" expression ")" ;
+ unary          → ( "-" | "!" ) expression ;
+ binary         → expression operator expression ;
+ operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
+                | "+"  | "-"  | "*" | "/" ;
+ */
+
+// from TSPL LanguageGuide
+//indirect enum ArithmeticExpression {
+//    case number(Int)
+//    case addition(ArithmeticExpression, ArithmeticExpression)
+//    case multiplication(ArithmeticExpression, ArithmeticExpression)
+//}
+
+// AST Classes ??? Maybe - translating the Java examples of abstract and final classes with a visitor
+// pattern into recursive enumerations in Swift, which smell like they're built for exactly
+// this kind of structure.
+// NOTE(heckj): I'm not sure if it makes sense to have Token as an associated value for the
+// enumeration elements or not. It's needed for NUMBER and STRING, but the rest - unclear.
+
+// Also, I suspect that I can interpret the book's use of the visitor pattern to make "addons" and
+// abstract implementations to the Java AST classes using a protocol when we get there... not 100%
+// sure though. Or maybe it's just adding an extension using Swift's extension mechanism. The book
+// does this with a printing-the-AST/tokens thing
+
+/*
+ let x = Expression.binary(Expression.Unary(),Expression.literal(.number(Token("12")))
+ public static void main(String[] args) {
+     Expr expression = new Expr.Binary(
+         new Expr.Unary(
+             new Token(TokenType.MINUS, "-", null, 1),
+             new Expr.Literal(123)),
+         new Token(TokenType.STAR, "*", null, 1),
+         new Expr.Grouping(
+             new Expr.Literal(45.67)));
+
+     System.out.println(new AstPrinter().print(expression));
+   }
+ 
+--- GENERATING:
+ 
+ (* (- 123) (group 45.67))
+ 
+--- USING ::
+ 
+ class AstPrinter implements Expr.Visitor<String> {
+   String print(Expr expr) {
+     return expr.accept(this);
+   }
+ }
+ @Override
+   public String visitBinaryExpr(Expr.Binary expr) {
+     return parenthesize(expr.operator.lexeme,
+                         expr.left, expr.right);
+   }
+
+   @Override
+   public String visitGroupingExpr(Expr.Grouping expr) {
+     return parenthesize("group", expr.expression);
+   }
+
+   @Override
+   public String visitLiteralExpr(Expr.Literal expr) {
+     if (expr.value == null) return "nil";
+     return expr.value.toString();
+   }
+
+   @Override
+   public String visitUnaryExpr(Expr.Unary expr) {
+     return parenthesize(expr.operator.lexeme, expr.right);
+   }
+ private String parenthesize(String name, Expr... exprs) {
+     StringBuilder builder = new StringBuilder();
+
+     builder.append("(").append(name);
+     for (Expr expr : exprs) {
+       builder.append(" ");
+       builder.append(expr.accept(this));
+     }
+     builder.append(")");
+
+     return builder.toString();
+   }
+ */
+
+indirect enum Expression {
+    case literal(LiteralExpression)
+    case unary(UnaryType, Expression)
+    case binary(Expression, OperatorExpression, Expression)
+    case grouping(Expression)
+}
+indirect enum LiteralExpression {
+    case number(Token)
+    case string(Token)
+    case trueToken(Token)
+    case falseToken(Token)
+    case nilToken(Token)
+}
+indirect enum UnaryType {
+    case minus(Token)
+    case not(Token)
+}
+indirect enum OperatorExpression {
+    case Equals(Token)
+    case NotEquals(Token)
+    case LessThan(Token)
+    case LessThanOrEqual(Token)
+    case GreaterThan(Token)
+    case GreaterThanOrEqual(Token)
+    case Add(Token)
+    case Subtract(Token)
+    case Multiply(Token)
+    case Divide(Token)
+}
+
 public enum Lox {
     static var hadError: Bool = false
     public static func main(args: [String]) throws {
