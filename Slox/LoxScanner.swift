@@ -43,12 +43,14 @@ final class Scanner {
     init(_ source: String) {
         self.source = source
         start = source.startIndex
-        current = start
+        current = source.startIndex
     }
 
     func scanTokens() -> [Token] {
         while !isAtEnd() {
+            // move the 'start' index cursor forward to our current location when starting a token scan
             start = current
+            // then get on with it, and find the next token
             scanToken()
         }
 
@@ -61,11 +63,17 @@ final class Scanner {
     }
 
     private func advance() -> Character {
+        // if we're at the end of the string, return a NUL character and return
+        // without advancing the index forward
         if isAtEnd() {
+            // and don't try to read the current character
             return "\0" // unicode NUL character
         }
+        // get the character at the current position BEFORE advancing the cursor
+        let char = source[current]
+        // step forward one index position
         current = source.index(after: current)
-        return source[current]
+        return char
     }
 
     private func peek() -> Character {
@@ -78,8 +86,11 @@ final class Scanner {
 
     private func peekNext() -> Character {
         // double character "look ahead" function
+        if isAtEnd() {
+            return "\0" // unicode NUL character
+        }
         let nextIndex: String.Index = source.index(after: current)
-        if isAtEnd() || (nextIndex >= source.endIndex) {
+        if nextIndex >= source.endIndex {
             return "\0" // unicode NUL character
         }
         return source[nextIndex]
@@ -114,8 +125,8 @@ final class Scanner {
                 _ = advance()
             }
         }
-        guard let value = Double(source[start ... current]) else {
-            Lox.error(line, message: "Unexpected error parsing a number from \(source[start ... current]).")
+        guard let value = Double(source[start ... source.index(before: current)]) else {
+            Lox.error(line, message: "Unexpected error parsing a number from \(source[start ... source.index(before: current)]).")
             return
         }
         addToken(TokenType.NUMBER, literal: value)
@@ -126,7 +137,7 @@ final class Scanner {
         while peek().isIdentifier {
             _ = advance()
         }
-        let text = source[start ... current]
+        let text = source[start ... source.index(before: current)]
         if let type = reservedWords[String(text)] {
             addToken(type)
         }
@@ -173,17 +184,17 @@ final class Scanner {
     }
 
     private func addToken(_ type: TokenType) {
-        let text = source[start ... current]
+        let text = source[start ... source.index(before: current)]
         tokens.append(Token(type: type, lexeme: String(text), line: line))
     }
 
     private func addToken(_ type: TokenType, literal: String) {
-        let text = source[start ... current]
+        let text = source[start ... source.index(before: current)]
         tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
     }
 
     private func addToken(_ type: TokenType, literal: Double) {
-        let text = source[start ... current]
+        let text = source[start ... source.index(before: current)]
         tokens.append(Token(type: type, lexeme: String(text), literal: literal, line: line))
     }
 
