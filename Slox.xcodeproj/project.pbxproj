@@ -13,6 +13,7 @@
 		1A7498A625F4185100C565FE /* LoxAST.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7498A525F4185100C565FE /* LoxAST.swift */; };
 		1A7863DF25F44342008786B0 /* SloxParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7863DE25F44342008786B0 /* SloxParser.swift */; };
 		1A94F1AD25EF0DDF00841C87 /* Lox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94F1AC25EF0DDF00841C87 /* Lox.swift */; };
+		1ABE428925F57C32003605DD /* LoxInterpretter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE428825F57C32003605DD /* LoxInterpretter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -36,6 +37,7 @@
 		1A7498A525F4185100C565FE /* LoxAST.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxAST.swift; sourceTree = "<group>"; };
 		1A7863DE25F44342008786B0 /* SloxParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloxParser.swift; sourceTree = "<group>"; };
 		1A94F1AC25EF0DDF00841C87 /* Lox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lox.swift; sourceTree = "<group>"; };
+		1ABE428825F57C32003605DD /* LoxInterpretter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxInterpretter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +76,7 @@
 				1A7498A125F4183700C565FE /* LoxTokens.swift */,
 				1A7498A325F4184400C565FE /* LoxScanner.swift */,
 				1A7498A525F4185100C565FE /* LoxAST.swift */,
+				1ABE428825F57C32003605DD /* LoxInterpretter.swift */,
 				1A7863DE25F44342008786B0 /* SloxParser.swift */,
 			);
 			path = Slox;
@@ -158,6 +161,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1ABE428925F57C32003605DD /* LoxInterpretter.swift in Sources */,
 				1A7498A425F4184400C565FE /* LoxScanner.swift in Sources */,
 				1A7498A225F4183700C565FE /* LoxTokens.swift in Sources */,
 				1A7863DF25F44342008786B0 /* SloxParser.swift in Sources */,

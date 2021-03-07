@@ -37,7 +37,7 @@ enum TokenType {
     case EOF
 }
 
-enum LiteralType {
+indirect enum LiteralType {
     // The rough equivalent of a Union for swift - a literal is one of these kinds of things,
     // but I didn't want to store each option in the Token class directly, nor make the Token class
     // into an enumeration itself.

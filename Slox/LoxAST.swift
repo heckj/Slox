@@ -200,21 +200,3 @@ let expression = Expression.binary(
 
 // prints: ( * ( - NUMBER 123 123.0 ) (group NUMBER 45.67 45.67) )
 // ( * ( - 123 ) (group 45.67) ) // using just the lexeme in the token
-
-/*
-  public static void main(String[] args) {
-      Expr expression = new Expr.Binary(
-          new Expr.Unary(
-              new Token(TokenType.MINUS, "-", null, 1),
-              new Expr.Literal(123)),
-          new Token(TokenType.STAR, "*", null, 1),
-          new Expr.Grouping(
-              new Expr.Literal(45.67)));
-
-      System.out.println(new AstPrinter().print(expression));
-    }
-
- --- GENERATING:
-
-  (* (- 123) (group 45.67))
- */
