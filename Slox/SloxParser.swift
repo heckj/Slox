@@ -254,13 +254,27 @@ class Parser {
         }
         if match(TokenType.LEFT_PAREN) {
             let expr = try expression()
-            consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.")
+            try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
             return Expression.grouping(expr)
         }
+        throw GrammarError.syntaxError(previous(), message: "No idea WTF just happened")
     }
 
+//    private Token consume(TokenType type, String message) {
+//        if (check(type)) return advance();
+//
+//        throw error(peek(), message);
+//      }
     // helper functions for the parser
     // - moving around the list of tokens and checking them
+
+    private func consume(_ type: TokenType, message: String) throws {
+        if check(type) {
+            _ = advance()
+            return
+        }
+        throw GrammarError.syntaxError(peek(), message: message)
+    }
 
     private func advance() -> Token {
         if !isAtEnd() {

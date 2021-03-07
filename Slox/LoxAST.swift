@@ -38,6 +38,7 @@ import Foundation
 enum GrammarError: Error {
     case invalidOperatorToken(Token)
     case invalidUnaryToken(Token)
+    case syntaxError(Token, message: String)
 }
 
 indirect enum Expression: CustomStringConvertible {
