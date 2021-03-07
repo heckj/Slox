@@ -38,133 +38,6 @@ import Foundation
 
   */
 
-/*
- //  expression     → equality ;
- indirect enum Expression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .exp(exp):
-             return "equality \(exp)"
-         }
-     }
-
-     case exp(EqualityExpression)
- }
-
- // equality       → comparison ( ( "!=" | "==" ) comparison )* ;
- indirect enum EqualityExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .equal(comparison_l, comparison_r):
-             return "\(comparison_l)==\(comparison_r)"
-         case let .notEqual(comparison_l, comparison_r):
-             return "\(comparison_l)!=\(comparison_r)"
-         }
-     }
-
-     case equal(ComparisonExpression, /* implied token ==, */ ComparisonExpression)
-     case notEqual(ComparisonExpression, /* implied token !=, */ ComparisonExpression)
- }
-
- // comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
- indirect enum ComparisonExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .lessThan(term_l, term_r):
-             return "\(term_l)<\(term_r)"
-         case let .lessThanOrEqual(term_l, term_r):
-             return "\(term_l)<=\(term_r)"
-         case let .greaterThan(term_l, term_r):
-             return "\(term_l)>\(term_r)"
-         case let .greaterThanOrEqual(term_l, term_r):
-             return "\(term_l)>=\(term_r)"
-         }
-     }
-
-     case lessThan(TermExpression, /* implied token <, */ TermExpression)
-     case lessThanOrEqual(TermExpression, /* implied token <=, */ TermExpression)
-     case greaterThan(TermExpression, /* implied token >, */ TermExpression)
-     case greaterThanOrEqual(TermExpression, /* implied token >=, */ TermExpression)
- }
-
- // term           → factor ( ( "-" | "+" ) factor )* ;
- indirect enum TermExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .plus(factor_l, factor_r):
-             return "\(factor_l) + \(factor_r)"
-         case let .minus(factor_l, factor_r):
-             return "\(factor_l) - \(factor_r)"
-         }
-     }
-
-     case plus(FactorExpression, /* implied token +, */ FactorExpression)
-     case minus(FactorExpression, /* implied token -, */ FactorExpression)
- }
-
- // factor         → unary ( ( "/" | "*" ) unary )* ;
- indirect enum FactorExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .multiply(unary_l, unary_r):
-             return "\(unary_l) * \(unary_r)"
-         case let .divide(unary_l, unary_r):
-             return "\(unary_l) / \(unary_r)"
-         }
-     }
-
-     case multiply(UnaryExpression, /* implied token *, */ UnaryExpression)
-     case divide(UnaryExpression, /* implied token /, */ UnaryExpression)
- }
-
- // unary          → ( "!" | "-" ) unary
- //                | primary ;
- indirect enum UnaryExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .not(unary):
-             return "!\(unary)"
-         case let .minus(unary):
-             return "-\(unary)"
-         case let .primary(primary):
-             return "\(primary)"
-         }
-     }
-
-     case not(UnaryExpression)
-     case minus(UnaryExpression)
-     case primary(PrimaryExpression)
- }
-
- // primary        → NUMBER | STRING | "true" | "false" | "nil"
- //                | "(" expression ")" ;
- indirect enum PrimaryExpression: CustomStringConvertible {
-     var description: String {
-         switch self {
-         case let .number(value):
-             return "\(value.lexeme)"
-         case let .string(value):
-             return "\(value.lexeme)"
-         case .trueToken:
-             return "true"
-         case .falseToken:
-             return "false"
-         case .nilToken:
-             return "nil"
-         case let .expression(exp):
-             return "\(exp)"
-         }
-     }
-
-     case number(Token) // double rather than token?
-     case string(Token) // string rather than token?
-     case trueToken
-     case falseToken
-     case nilToken
-     case expression(Expression)
- }
- */
-
 class Parser {
     var tokens: [Token] = []
     var current: Int = 0
@@ -257,14 +130,22 @@ class Parser {
             try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
             return Expression.grouping(expr)
         }
-        throw GrammarError.syntaxError(previous(), message: "No idea WTF just happened")
+        throw error(peek(), message: "Expect expression.")
     }
 
-//    private Token consume(TokenType type, String message) {
-//        if (check(type)) return advance();
-//
-//        throw error(peek(), message);
-//      }
+    // feh: Error handling in Swift:
+    // https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html
+    func parse() -> Expression {
+        do {
+            let attempt = try expression()
+            return attempt
+        } catch let GrammarError.syntaxError(token, message) {
+            return Expression.literal(.nilToken(token)) // null -> Expression?
+        } catch is Error {
+            print("Big WTF: \(String(describing: error))")
+        }
+    }
+
     // helper functions for the parser
     // - moving around the list of tokens and checking them
 
@@ -310,5 +191,36 @@ class Parser {
             }
         }
         return false
+    }
+
+    // ParseError and Syntax Issue handling
+
+    private func error(_ token: Token, message: String) -> GrammarError {
+        Lox.error(token.line, message: message)
+        return GrammarError.syntaxError(token, message: message)
+    }
+
+    private func synchronize() {
+        _ = advance()
+
+        while !isAtEnd() {
+            if previous().type == TokenType.SEMICOLON {
+                return
+            }
+            switch peek().type {
+            case .CLASS, .FUN, .VAR, .FOR, .IF, .WHILE, .PRINT, .RETURN:
+                return
+            default:
+                _ = advance()
+            }
+        }
+    }
+
+    static func error(_ token: Token, message: String) {
+        if token.type == TokenType.EOF {
+            Lox.report(line: token.line, example: " at end ", message: message)
+        } else {
+            Lox.report(line: token.line, example: " at '" + token.lexeme + "'", message: message)
+        }
     }
 }
