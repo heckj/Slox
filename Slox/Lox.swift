@@ -41,10 +41,16 @@ public enum Lox {
     }
 
     static func run(_ source: String) {
-        let tokenlist = source.components(separatedBy: .whitespacesAndNewlines)
+        let tokenlist = Scanner(source).scanTokens()
         for token in tokenlist {
             print(token)
         }
+        let parser = Parser(tokenlist)
+        let expr = parser.parse()
+        if hadError {
+            return
+        }
+        print(String(describing: expr))
     }
 
     public static func error(_ line: Int, message: String) {

@@ -135,14 +135,14 @@ class Parser {
 
     // feh: Error handling in Swift:
     // https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html
-    func parse() -> Expression {
+    func parse() -> Expression? {
         do {
             let attempt = try expression()
             return attempt
-        } catch let GrammarError.syntaxError(token, message) {
-            return Expression.literal(.nilToken(token)) // null -> Expression?
-        } catch is Error {
-            print("Big WTF: \(String(describing: error))")
+        } catch GrammarError.syntaxError(_, _) {
+            return nil
+        } catch {
+            return nil
         }
     }
 

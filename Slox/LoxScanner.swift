@@ -61,10 +61,11 @@ final class Scanner {
     }
 
     private func advance() -> Character {
-        let nextIndexPosition = source.index(after: current)
-        current = nextIndexPosition
-        let char: Character = source[current]
-        return char
+        if isAtEnd() {
+            return "\0" // unicode NUL character
+        }
+        current = source.index(after: current)
+        return source[current]
     }
 
     private func peek() -> Character {
