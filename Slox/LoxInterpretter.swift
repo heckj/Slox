@@ -90,7 +90,7 @@ extension LiteralExpression: Interpretable {
     }
 }
 
-extension UnaryType: Interpretable {
+extension UnaryExpression: Interpretable {
     func evaluate() throws -> RuntimeValue {
         // foo
         throw LoxRuntimeError.oops

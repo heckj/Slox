@@ -102,7 +102,7 @@ class Parser {
         if match(TokenType.BANG, TokenType.MINUS) {
             let op: Token = previous()
             let right: Expression = try unary()
-            return try Expression.unary(UnaryType.fromToken(op), right)
+            return try Expression.unary(UnaryExpression.fromToken(op), right)
         }
         return try primary()
     }

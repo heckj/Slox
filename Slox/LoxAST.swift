@@ -56,7 +56,7 @@ indirect enum Expression: CustomStringConvertible {
     }
 
     case literal(LiteralExpression)
-    case unary(UnaryType, Expression)
+    case unary(UnaryExpression, Expression)
     case binary(Expression, OperatorExpression, Expression)
     case grouping(Expression)
 }
@@ -84,7 +84,7 @@ indirect enum LiteralExpression: CustomStringConvertible {
     case nilToken(Token)
 }
 
-indirect enum UnaryType: CustomStringConvertible {
+indirect enum UnaryExpression: CustomStringConvertible {
     var description: String {
         switch self {
         case .minus:
@@ -97,12 +97,12 @@ indirect enum UnaryType: CustomStringConvertible {
     case minus(Token)
     case not(Token)
 
-    static func fromToken(_ t: Token) throws -> UnaryType {
+    static func fromToken(_ t: Token) throws -> UnaryExpression {
         switch t.type {
         case .MINUS:
-            return UnaryType.minus(t)
+            return UnaryExpression.minus(t)
         case .BANG:
-            return UnaryType.not(t)
+            return UnaryExpression.not(t)
         default:
             Lox.error(0, message: "Invalid operator token")
             throw GrammarError.invalidUnaryToken(t)
