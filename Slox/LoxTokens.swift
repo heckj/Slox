@@ -46,12 +46,12 @@ indirect enum LiteralType {
     case none
 }
 
-final class Token: CustomStringConvertible {
+public final class Token: CustomStringConvertible {
     let type: TokenType
     let lexeme: String
     let literal: LiteralType
     let line: Int
-    var description: String {
+    public var description: String {
         switch literal {
         case let .number(value):
             return "\(type) \(lexeme) \(value)"

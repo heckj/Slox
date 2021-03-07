@@ -41,8 +41,8 @@ enum GrammarError: Error {
     case syntaxError(Token, message: String)
 }
 
-indirect enum Expression: CustomStringConvertible {
-    var description: String {
+public indirect enum Expression: CustomStringConvertible {
+    public var description: String {
         switch self {
         case let .literal(exp):
             return "\(exp)"
@@ -61,8 +61,8 @@ indirect enum Expression: CustomStringConvertible {
     case grouping(Expression)
 }
 
-indirect enum LiteralExpression: CustomStringConvertible {
-    var description: String {
+public indirect enum LiteralExpression: CustomStringConvertible {
+    public var description: String {
         switch self {
         case let .number(value):
             return "\(value.lexeme)"
@@ -84,8 +84,8 @@ indirect enum LiteralExpression: CustomStringConvertible {
     case nilToken(Token)
 }
 
-indirect enum UnaryExpression: CustomStringConvertible {
-    var description: String {
+public indirect enum UnaryExpression: CustomStringConvertible {
+    public var description: String {
         switch self {
         case .minus:
             return "-"
@@ -110,8 +110,8 @@ indirect enum UnaryExpression: CustomStringConvertible {
     }
 }
 
-indirect enum OperatorExpression: CustomStringConvertible {
-    var description: String {
+public indirect enum OperatorExpression: CustomStringConvertible {
+    public var description: String {
         switch self {
         case .Equals:
             return "="

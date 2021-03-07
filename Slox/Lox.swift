@@ -10,6 +10,9 @@ import Foundation
 
 public enum Lox {
     static var hadError: Bool = false
+    static var hadRuntimeError: Bool = false
+    private static let interpretter = Interpretter()
+
     public static func main(args: [String]) throws {
         if args.count > 1 {
             print("Usage: slox [script]")
@@ -46,15 +49,35 @@ public enum Lox {
             print(token)
         }
         let parser = Parser(tokenlist)
-        let expr = parser.parse()
+        guard let expr = parser.parse() else {
+            return
+        }
         if hadError {
             return
         }
-        print(String(describing: expr))
+        // 1print(String(describing: expr))
+
+        let result = interpretter.interpretResult(expr: expr)
+        switch result {
+        case let .failure(err):
+            Lox.runtimeError(err)
+        case let .success(val):
+            print("<LOX=> \(val)")
+        }
     }
 
     public static func error(_ line: Int, message: String) {
         report(line: line, example: "", message: message)
+    }
+
+    public static func runtimeError(_ err: LoxRuntimeError) {
+        switch err {
+        case .notImplemented:
+            print("RuntimeError: Not Implemented")
+        case let .oops(token):
+            print("RuntimeError with \(token) at line \(token.line)")
+        }
+        hadRuntimeError = true
     }
 
     static func report(line: Int, example: String, message: String) {
