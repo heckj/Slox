@@ -13,6 +13,9 @@ enum LoxRuntimeError: Error {
     case oops
 }
 
+/// The form of value that evaluating from a LoxInterpretter returns. The source material choose to
+/// do this as dynamic typing, and leveraged Java's runtime casting to convert things around as need
+/// be, but I'm applying some structure under the covers with this enumeration to hold the related values.
 public indirect enum RuntimeValue {
     case string(value: String)
     case number(value: Double)
@@ -50,12 +53,222 @@ extension Expression: Interpretable {
                 }
             }
         case let .binary(expr_l, expr_op, expr_r):
-            print("uh...")
+            let lefteval = try expr_l.evaluate()
+            let righteval = try expr_r.evaluate()
+            switch expr_op {
+            case .Subtract:
+                switch lefteval {
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.number(value: leftval - rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't 'subtract' these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to 'subtract' these types
+                }
+
+            case .Multiply:
+                switch lefteval {
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.number(value: leftval * rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't 'subtract' these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to 'subtract' these types
+                }
+
+            case .Divide:
+                switch lefteval {
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.number(value: leftval / rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't 'subtract' these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to 'subtract' these types
+                }
+
+            case .Add:
+                switch lefteval {
+                // add the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.number(value: leftval + rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't 'add' these types from others
+                    }
+                // concatenate the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.string(value: leftval + rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't 'add' these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to 'add' these types
+                }
+
+            case .LessThan:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval < rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval < rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+
+            case .LessThanOrEqual:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval <= rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval <= rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+
+            case .GreaterThan:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval > rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval > rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+
+            case .GreaterThanOrEqual:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval >= rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval >= rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+
+            case .Equals:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval == rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval == rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the bools
+                case let .boolean(leftval):
+                    switch righteval {
+                    case let .boolean(rightval):
+                        return RuntimeValue.boolean(value: leftval == rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+
+            case .NotEquals:
+                switch lefteval {
+                // compare the numbers
+                case let .number(leftval):
+                    switch righteval {
+                    case let .number(rightval):
+                        return RuntimeValue.boolean(value: leftval != rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the strings
+                case let .string(leftval):
+                    switch righteval {
+                    case let .string(rightval):
+                        return RuntimeValue.boolean(value: leftval != rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                // compare the bools
+                case let .boolean(leftval):
+                    switch righteval {
+                    case let .boolean(rightval):
+                        return RuntimeValue.boolean(value: leftval != rightval)
+                    default:
+                        throw LoxRuntimeError.oops // can't compare these types from others
+                    }
+                default:
+                    throw LoxRuntimeError.oops // not allowed to compare these types
+                }
+            }
         // binary
         case let .grouping(expr):
             return try expr.evaluate()
         }
-        throw LoxRuntimeError.oops
     }
 }
 
