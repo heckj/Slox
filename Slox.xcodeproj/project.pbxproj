@@ -11,6 +11,7 @@
 		1A7498A225F4183700C565FE /* LoxTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7498A125F4183700C565FE /* LoxTokens.swift */; };
 		1A7498A425F4184400C565FE /* LoxScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7498A325F4184400C565FE /* LoxScanner.swift */; };
 		1A7498A625F4185100C565FE /* LoxAST.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7498A525F4185100C565FE /* LoxAST.swift */; };
+		1A7863DF25F44342008786B0 /* SloxParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7863DE25F44342008786B0 /* SloxParser.swift */; };
 		1A94F1AD25EF0DDF00841C87 /* Lox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94F1AC25EF0DDF00841C87 /* Lox.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +34,7 @@
 		1A7498A125F4183700C565FE /* LoxTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxTokens.swift; sourceTree = "<group>"; };
 		1A7498A325F4184400C565FE /* LoxScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxScanner.swift; sourceTree = "<group>"; };
 		1A7498A525F4185100C565FE /* LoxAST.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxAST.swift; sourceTree = "<group>"; };
+		1A7863DE25F44342008786B0 /* SloxParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SloxParser.swift; sourceTree = "<group>"; };
 		1A94F1AC25EF0DDF00841C87 /* Lox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lox.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -72,6 +74,7 @@
 				1A7498A125F4183700C565FE /* LoxTokens.swift */,
 				1A7498A325F4184400C565FE /* LoxScanner.swift */,
 				1A7498A525F4185100C565FE /* LoxAST.swift */,
+				1A7863DE25F44342008786B0 /* SloxParser.swift */,
 			);
 			path = Slox;
 			sourceTree = "<group>";
@@ -157,6 +160,7 @@
 			files = (
 				1A7498A425F4184400C565FE /* LoxScanner.swift in Sources */,
 				1A7498A225F4183700C565FE /* LoxTokens.swift in Sources */,
+				1A7863DF25F44342008786B0 /* SloxParser.swift in Sources */,
 				1A7498A625F4185100C565FE /* LoxAST.swift in Sources */,
 				1A4DD44825EF0D79008D500A /* main.swift in Sources */,
 				1A94F1AD25EF0DDF00841C87 /* Lox.swift in Sources */,

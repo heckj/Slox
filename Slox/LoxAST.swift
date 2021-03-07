@@ -35,6 +35,11 @@ import Foundation
 // sure though. Or maybe it's just adding an extension using Swift's extension mechanism. The book
 // does this with a printing-the-AST/tokens thing
 
+enum GrammarError: Error {
+    case invalidOperatorToken(Token)
+    case invalidUnaryToken(Token)
+}
+
 indirect enum Expression: CustomStringConvertible {
     var description: String {
         switch self {
@@ -90,6 +95,18 @@ indirect enum UnaryType: CustomStringConvertible {
 
     case minus(Token)
     case not(Token)
+
+    static func fromToken(_ t: Token) throws -> UnaryType {
+        switch t.type {
+        case .MINUS:
+            return UnaryType.minus(t)
+        case .BANG:
+            return UnaryType.not(t)
+        default:
+            Lox.error(0, message: "Invalid operator token")
+            throw GrammarError.invalidUnaryToken(t)
+        }
+    }
 }
 
 indirect enum OperatorExpression: CustomStringConvertible {
@@ -128,6 +145,35 @@ indirect enum OperatorExpression: CustomStringConvertible {
     case Subtract(Token)
     case Multiply(Token)
     case Divide(Token)
+
+    static func fromToken(_ t: Token) throws -> OperatorExpression {
+        switch t.type {
+        case .EQUAL: return OperatorExpression.Equals(t)
+        case .MINUS:
+            return OperatorExpression.Subtract(t)
+        case .PLUS:
+            return OperatorExpression.Add(t)
+        case .SLASH:
+            return OperatorExpression.Divide(t)
+        case .STAR:
+            return OperatorExpression.Multiply(t)
+        case .BANG_EQUAL:
+            return OperatorExpression.NotEquals(t)
+        case .EQUAL_EQUAL:
+            return OperatorExpression.Equals(t)
+        case .GREATER:
+            return OperatorExpression.GreaterThan(t)
+        case .GREATER_EQUAL:
+            return OperatorExpression.GreaterThanOrEqual(t)
+        case .LESS:
+            return OperatorExpression.LessThan(t)
+        case .LESS_EQUAL:
+            return OperatorExpression.LessThanOrEqual(t)
+        default:
+            Lox.error(0, message: "Invalid operator token")
+            throw GrammarError.invalidOperatorToken(t)
+        }
+    }
 }
 
 // translated example code, with every AST node having a copy of the token that generated it...
@@ -150,8 +196,10 @@ let expression = Expression.binary(
         )
     )
 )
+
 // prints: ( * ( - NUMBER 123 123.0 ) (group NUMBER 45.67 45.67) )
 // ( * ( - 123 ) (group 45.67) ) // using just the lexeme in the token
+
 /*
   public static void main(String[] args) {
       Expr expression = new Expr.Binary(
