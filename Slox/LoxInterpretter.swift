@@ -6,6 +6,7 @@
 //
 
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
+// pending: https://craftinginterpreters.com/statements-and-state.html#global-variables
 
 import Foundation
 
@@ -38,6 +39,9 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 }
 
 public protocol Interpretable {
+    // TODO - convert this to a Result<Success,Failure> type response instead of
+    // trying to throw. Java uses throw for execution control, but it breaks down
+    // quickly with Swift and makes like really, really difficult.
     func evaluate() throws -> RuntimeValue
 }
 
@@ -332,6 +336,9 @@ extension OperatorExpression: Interpretable {
 }
 
 public protocol RuntimeEvaluation {
+    // TODO - convert this to a Result<Success,Failure> type response instead of
+    // trying to throw. Java uses throw for execution control, but it breaks down
+    // quickly with Swift and makes like really, really difficult.
     func execute() throws
 }
 
@@ -353,6 +360,7 @@ public class Interpretter {
         do {
             for statement in statements {
                 try statement.execute()
+                // currently if this fails, there's nothing that actually blows up
             }
         } catch LoxRuntimeError.notImplemented {
             Lox.runtimeError(LoxRuntimeError.notImplemented)
