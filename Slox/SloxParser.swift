@@ -133,17 +133,39 @@ class Parser {
         throw error(peek(), message: "Expect expression.")
     }
 
+    private func statement() throws -> Statement {
+        if match(.PRINT) {
+            return try printStatement()
+        }
+        return try expressionStatement()
+    }
+
+    private func printStatement() throws -> Statement {
+        let value: Expression = try expression()
+        try consume(.SEMICOLON, message: "Expect ';' after value.")
+        return Statement.print(value)
+    }
+
+    private func expressionStatement() throws -> Statement {
+        let value: Expression = try expression()
+        try consume(.SEMICOLON, message: "Expect ';' after value.")
+        return Statement.expression(value)
+    }
+
     // feh: Error handling in Swift:
     // https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html
-    func parse() -> Expression? {
+    func parse() -> [Statement] {
+        var statements: [Statement] = []
         do {
-            let attempt = try expression()
-            return attempt
-        } catch GrammarError.syntaxError(_, _) {
-            return nil
+            while !isAtEnd() {
+                try statements.append(statement())
+            }
+        } catch ParserError.syntaxError(_, _) {
+            return statements // maybe bad idea - error handling w/ statements?
         } catch {
-            return nil
+            return statements // maybe bad idea
         }
+        return statements
     }
 
     // helper functions for the parser
@@ -154,7 +176,7 @@ class Parser {
             _ = advance()
             return
         }
-        throw GrammarError.syntaxError(peek(), message: message)
+        throw ParserError.syntaxError(peek(), message: message)
     }
 
     private func advance() -> Token {
@@ -195,9 +217,9 @@ class Parser {
 
     // ParseError and Syntax Issue handling
 
-    private func error(_ token: Token, message: String) -> GrammarError {
+    private func error(_ token: Token, message: String) -> ParserError {
         Lox.error(token.line, message: message)
-        return GrammarError.syntaxError(token, message: message)
+        return ParserError.syntaxError(token, message: message)
     }
 
     private func synchronize() {

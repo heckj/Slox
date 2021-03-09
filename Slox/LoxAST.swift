@@ -8,6 +8,7 @@
 import Foundation
 
 // source material translated from Java in https://craftinginterpreters.com/representing-code.html
+// grammar syntax for statements: https://craftinginterpreters.com/statements-and-state.html
 
 /*
  LOX grammar
@@ -22,20 +23,25 @@ import Foundation
  binary         → expression operator expression ;
  operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
                 | "+"  | "-"  | "*" | "/" ;
+
+ program        → statement* EOF ;
+
+ statement      → exprStmt
+                | printStmt ;
+
+ exprStmt       → expression ";" ;
+ printStmt      → "print" expression ";" ;
  */
 
-// AST Classes ??? Maybe - translating the Java examples of abstract and final classes with a visitor
-// pattern into recursive enumerations in Swift, which smell like they're built for exactly
-// this kind of structure.
-// NOTE(heckj): I'm not sure if it makes sense to have Token as an associated value for the
-// enumeration elements or not. It's needed for NUMBER and STRING, but the rest - unclear.
+// public indirect enum Program {
+//
+// }
+public indirect enum Statement {
+    case expression(Expression)
+    case print(Expression)
+}
 
-// Also, I suspect that I can interpret the book's use of the visitor pattern to make "addons" and
-// abstract implementations to the Java AST classes using a protocol when we get there... not 100%
-// sure though. Or maybe it's just adding an extension using Swift's extension mechanism. The book
-// does this with a printing-the-AST/tokens thing
-
-enum GrammarError: Error {
+enum ParserError: Error {
     case invalidOperatorToken(Token)
     case invalidUnaryToken(Token)
     case syntaxError(Token, message: String)
@@ -105,7 +111,7 @@ public indirect enum UnaryExpression: CustomStringConvertible {
             return UnaryExpression.not(t)
         default:
             Lox.error(0, message: "Invalid operator token")
-            throw GrammarError.invalidUnaryToken(t)
+            throw ParserError.invalidUnaryToken(t)
         }
     }
 }
@@ -172,7 +178,7 @@ public indirect enum OperatorExpression: CustomStringConvertible {
             return OperatorExpression.LessThanOrEqual(t)
         default:
             Lox.error(0, message: "Invalid operator token")
-            throw GrammarError.invalidOperatorToken(t)
+            throw ParserError.invalidOperatorToken(t)
         }
     }
 }

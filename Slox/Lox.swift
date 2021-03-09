@@ -55,7 +55,7 @@ public enum Lox {
         if hadError {
             return
         }
-        // 1print(String(describing: expr))
+        // print(String(describing: expr))
 
         let result = interpretter.interpretResult(expr: expr)
         switch result {
