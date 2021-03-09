@@ -39,335 +39,353 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 }
 
 public protocol Interpretable {
-    // TODO - convert this to a Result<Success,Failure> type response instead of
-    // trying to throw. Java uses throw for execution control, but it breaks down
-    // quickly with Swift and makes like really, really difficult.
-    func evaluate() throws -> RuntimeValue
+    func evaluate() -> Result<RuntimeValue, LoxRuntimeError>
+    // NOTE(heckj): Okay - so I get it working, but holy crap that was a pain
+    // in butt. It would be SO much easier if Result acted like a classic Promise
+    // instead of forcing the switch to evaluate the result. It's seriously not
+    // meant for chaining, so in the resulting implementation here is an
+    // indention-from-hell scenario.
+    // async/await MIGHT make this better, but really it begs for a promise-style
+    // library rather than the fundamental Result type. A couple of places, the
+    // binary and unary expressions specifically, I want to evaluate 2 or 3 promises
+    // in parallel and jump ship to a propagating a failure if any of them fail.
 }
 
-// AST enums: Expression, LiteralExpression, UnaryType, OperatorExpression
+// AST enums: Expression, LiteralExpression, UnaryExpression, OperatorExpression
 extension Expression: Interpretable {
-    public func evaluate() throws -> RuntimeValue {
+    public func evaluate() -> Result<RuntimeValue, LoxRuntimeError> {
         switch self {
         case let .literal(litexpr):
-            return try litexpr.evaluate()
+            return litexpr.evaluate()
         case let .unary(unaryexpr, expr):
+            var val: RuntimeValue?
+
+            switch expr.evaluate() {
+            case let .success(workingval):
+                val = workingval
+            case let .failure(err):
+                return .failure(err)
+            }
+            guard let runtimeValue = val else {
+                return .failure(LoxRuntimeError.notImplemented)
+            }
+
             switch unaryexpr {
             case let .minus(token):
-                let workingval = try expr.evaluate()
-                switch workingval {
+                switch runtimeValue {
                 case .boolean(_), .string(_), .none:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'minus' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'minus' these types
                 case let .number(value):
-                    return RuntimeValue.number(value: -value)
+                    return .success(RuntimeValue.number(value: -value))
                 }
             case let .not(token):
-                let workingval = try expr.evaluate()
-                switch workingval {
+                switch runtimeValue {
                 case .number(_), .string(_), .none:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'minus' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'minus' these types
                 case let .boolean(value):
-                    return RuntimeValue.boolean(value: !value)
+                    return .success(RuntimeValue.boolean(value: !value))
                 }
             }
         case let .binary(expr_l, expr_op, expr_r):
-            let lefteval = try expr_l.evaluate()
-            let righteval = try expr_r.evaluate()
+            var leftRuntimeValue: RuntimeValue?
+            var rightRuntimeValue: RuntimeValue?
+            // check left and right result, if either failed - propagate it
+            switch expr_l.evaluate() {
+            case let .success(leftval):
+                leftRuntimeValue = leftval
+            case let .failure(err):
+                return .failure(err)
+            }
+
+            switch expr_r.evaluate() {
+            case let .failure(err):
+                return .failure(err)
+            case let .success(righteval):
+                rightRuntimeValue = righteval
+            }
+
             switch expr_op {
             case let .Subtract(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.number(value: leftval - rightval)
+                        return .success(RuntimeValue.number(value: leftval - rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't 'subtract' these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'subtract' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Multiply(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.number(value: leftval * rightval)
+                        return .success(RuntimeValue.number(value: leftval * rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't 'subtract' these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'subtract' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Divide(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.number(value: leftval / rightval)
+                        return .success(RuntimeValue.number(value: leftval / rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't 'subtract' these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'subtract' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Add(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // add the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.number(value: leftval + rightval)
+                        return .success(RuntimeValue.number(value: leftval + rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't 'add' these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't 'add' these types from others
                     }
                 // concatenate the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.string(value: leftval + rightval)
+                        return .success(RuntimeValue.string(value: leftval + rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't 'add' these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't 'add' these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to 'add' these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'add' these types
                 }
 
             case let .LessThan(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval < rightval)
+                        return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval < rightval)
+                        return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .LessThanOrEqual(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval <= rightval)
+                        return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval <= rightval)
+                        return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .GreaterThan(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval > rightval)
+                        return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval > rightval)
+                        return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .GreaterThanOrEqual(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval >= rightval)
+                        return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval >= rightval)
+                        return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .Equals(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval == rightval)
+                        return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval == rightval)
+                        return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the bools
                 case let .boolean(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .boolean(rightval):
-                        return RuntimeValue.boolean(value: leftval == rightval)
+                        return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .NotEquals(token):
-                switch lefteval {
+                switch leftRuntimeValue {
                 // compare the numbers
                 case let .number(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .number(rightval):
-                        return RuntimeValue.boolean(value: leftval != rightval)
+                        return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .string(rightval):
-                        return RuntimeValue.boolean(value: leftval != rightval)
+                        return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the bools
                 case let .boolean(leftval):
-                    switch righteval {
+                    switch rightRuntimeValue {
                     case let .boolean(rightval):
-                        return RuntimeValue.boolean(value: leftval != rightval)
+                        return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        throw LoxRuntimeError.oops(token) // can't compare these types from others
+                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    throw LoxRuntimeError.oops(token) // not allowed to compare these types
+                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
                 }
             }
         // binary
         case let .grouping(expr):
-            return try expr.evaluate()
+            return expr.evaluate()
         }
     }
 }
 
 extension LiteralExpression: Interpretable {
-    public func evaluate() throws -> RuntimeValue {
+    public func evaluate() -> Result<RuntimeValue, LoxRuntimeError> {
         switch self {
         case let .number(token):
             switch token.literal {
             case .none:
-                throw LoxRuntimeError.oops(token)
+                return .failure(LoxRuntimeError.oops(token))
             case .string:
-                throw LoxRuntimeError.oops(token)
+                return .failure(LoxRuntimeError.oops(token))
             case let .number(value: value):
-                return RuntimeValue.number(value: value)
+                return .success(RuntimeValue.number(value: value))
             }
         case let .string(token):
             switch token.literal {
             case .none:
-                throw LoxRuntimeError.oops(token)
+                return .failure(LoxRuntimeError.oops(token))
             case let .string(value: value):
-                return RuntimeValue.string(value: value)
+                return .success(RuntimeValue.string(value: value))
             case .number:
-                throw LoxRuntimeError.oops(token)
+                return .failure(LoxRuntimeError.oops(token))
             }
         case .trueToken:
-            return RuntimeValue.boolean(value: true)
+            return .success(RuntimeValue.boolean(value: true))
         case .falseToken:
-            return RuntimeValue.boolean(value: false)
+            return .success(RuntimeValue.boolean(value: false))
         case .nilToken:
-            return RuntimeValue.none
+            return .success(RuntimeValue.none)
         }
-    }
-}
-
-extension UnaryExpression: Interpretable {
-    public func evaluate() throws -> RuntimeValue {
-        // foo
-        throw LoxRuntimeError.notImplemented
-    }
-}
-
-extension OperatorExpression: Interpretable {
-    public func evaluate() throws -> RuntimeValue {
-        // foo
-        throw LoxRuntimeError.notImplemented
     }
 }
 
 public protocol RuntimeEvaluation {
-    // TODO - convert this to a Result<Success,Failure> type response instead of
-    // trying to throw. Java uses throw for execution control, but it breaks down
-    // quickly with Swift and makes like really, really difficult.
-    func execute() throws
+    func execute() -> Result<Int, LoxRuntimeError>
 }
 
 extension Statement: RuntimeEvaluation {
-    public func execute() throws {
+    public func execute() -> Result<Int, LoxRuntimeError> {
         switch self {
         case let .printStatement(expr):
-            let result = try expr.evaluate() // _ is a RuntimeValue
-            print(result)
-
-        case let .expressionStatement(expr):
-            _ = try expr.evaluate()
+            let result = expr.evaluate() // _ is a RuntimeValue
+            switch result {
+            case let .success(runtimevalue):
+                print(runtimevalue)
+            case let .failure(err):
+                print("ERROR: \(err)")
+                return .failure(err)
+            }
+        default:
+            return .failure(LoxRuntimeError.notImplemented)
         }
+        return .success(0)
     }
 }
 
 public class Interpretter {
+    private func pass() {}
     public func interpretStatements(_ statements: [Statement]) {
-        do {
-            for statement in statements {
-                try statement.execute()
-                // currently if this fails, there's nothing that actually blows up
+        for statement in statements {
+            switch statement.execute() {
+            case let .failure(err):
+                print("INTERPRETTER HALTING: \(err)")
+                return
+            case .success:
+                pass()
             }
-        } catch LoxRuntimeError.notImplemented {
-            Lox.runtimeError(LoxRuntimeError.notImplemented)
-        } catch let LoxRuntimeError.oops(token) {
-            Lox.runtimeError(LoxRuntimeError.oops(token))
-        } catch {
-            Lox.runtimeError(LoxRuntimeError.notImplemented) // unknown error actually
         }
     }
 
