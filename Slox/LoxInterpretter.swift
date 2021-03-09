@@ -331,23 +331,48 @@ extension OperatorExpression: Interpretable {
     }
 }
 
+public protocol RuntimeEvaluation {
+    func execute() throws
+}
+
+extension Statement: RuntimeEvaluation {
+    public func execute() throws {
+        switch self {
+        case let .printStatement(expr):
+            let result = try expr.evaluate() // _ is a RuntimeValue
+            print(result)
+
+        case let .expressionStatement(expr):
+            _ = try expr.evaluate()
+        }
+    }
+}
+
 public class Interpretter {
-    public func interpretResult(expr: Expression) -> Result<RuntimeValue, LoxRuntimeError> {
+    public func interpretStatements(_ statements: [Statement]) {
         do {
-            let result = try expr.evaluate()
-            return .success(result)
+            for statement in statements {
+                try statement.execute()
+            }
         } catch LoxRuntimeError.notImplemented {
-            return .failure(LoxRuntimeError.notImplemented)
+            Lox.runtimeError(LoxRuntimeError.notImplemented)
         } catch let LoxRuntimeError.oops(token) {
-            return .failure(LoxRuntimeError.oops(token))
+            Lox.runtimeError(LoxRuntimeError.oops(token))
         } catch {
-            return .failure(LoxRuntimeError.notImplemented) // unknown error actually
+            Lox.runtimeError(LoxRuntimeError.notImplemented) // unknown error actually
         }
     }
 
-    public func interpret(expr: Expression) throws -> RuntimeValue {
-        let result = try expr.evaluate()
-        print(String(describing: result))
-        return result
-    }
+//    public func interpretResult(expr: Expression) -> Result<RuntimeValue, LoxRuntimeError> {
+//        do {
+//            let result = try expr.evaluate()
+//            return .success(result)
+//        } catch LoxRuntimeError.notImplemented {
+//            return .failure(LoxRuntimeError.notImplemented)
+//        } catch let LoxRuntimeError.oops(token) {
+//            return .failure(LoxRuntimeError.oops(token))
+//        } catch {
+//            return .failure(LoxRuntimeError.notImplemented) // unknown error actually
+//        }
+//    }
 }

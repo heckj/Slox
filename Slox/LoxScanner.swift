@@ -140,8 +140,9 @@ final class Scanner {
         let text = source[start ... source.index(before: current)]
         if let type = reservedWords[String(text)] {
             addToken(type)
+        } else {
+            addToken(.IDENTIFIER)
         }
-        addToken(.IDENTIFIER)
     }
 
     private func scanToken() {

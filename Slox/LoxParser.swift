@@ -143,13 +143,13 @@ class Parser {
     private func printStatement() throws -> Statement {
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
-        return Statement.print(value)
+        return Statement.printStatement(value)
     }
 
     private func expressionStatement() throws -> Statement {
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
-        return Statement.expression(value)
+        return Statement.expressionStatement(value)
     }
 
     // feh: Error handling in Swift:

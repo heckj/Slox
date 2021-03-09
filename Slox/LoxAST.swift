@@ -37,8 +37,8 @@ import Foundation
 //
 // }
 public indirect enum Statement {
-    case expression(Expression)
-    case print(Expression)
+    case expressionStatement(Expression)
+    case printStatement(Expression)
 }
 
 enum ParserError: Error {

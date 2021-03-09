@@ -45,25 +45,17 @@ public enum Lox {
 
     static func run(_ source: String) {
         let tokenlist = Scanner(source).scanTokens()
-        for token in tokenlist {
-            print(token)
-        }
+//        for token in tokenlist {
+//            print(token)
+//        }
+        print("Scanner generated tokens: \(tokenlist)")
         let parser = Parser(tokenlist)
-        guard let expr = parser.parse() else {
-            return
-        }
+        let statements = parser.parse()
+        print("generated \(statements.count) statements")
         if hadError {
             return
         }
-        // print(String(describing: expr))
-
-        let result = interpretter.interpretResult(expr: expr)
-        switch result {
-        case let .failure(err):
-            Lox.runtimeError(err)
-        case let .success(val):
-            print("<LOX=> \(val)")
-        }
+        interpretter.interpretStatements(statements)
     }
 
     public static func error(_ line: Int, message: String) {
