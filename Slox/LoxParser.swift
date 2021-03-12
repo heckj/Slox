@@ -37,7 +37,7 @@ import Foundation
                  | "(" expression ")" ;
 
  Updated grammar, identifiers, Chapter 8
- 
+
  primary        → "true" | "false" | "nil"
                 | NUMBER | STRING
                 | "(" expression ")"

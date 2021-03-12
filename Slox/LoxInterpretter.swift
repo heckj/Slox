@@ -10,9 +10,10 @@
 
 import Foundation
 
-public enum LoxRuntimeError: Error {
+public enum RuntimeError: Error {
     case notImplemented
     case oops(_ token: Token) // TODO: - remove this catch-all and replace with useful runtime errors
+    case undefinedVariable(_ token: Token, message: String = "")
 }
 
 /// The form of value that evaluating from a LoxInterpretter returns. The source material choose to
@@ -39,7 +40,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 }
 
 public protocol Interpretable {
-    func evaluate() -> Result<RuntimeValue, LoxRuntimeError>
+    func evaluate() -> Result<RuntimeValue, RuntimeError>
     // NOTE(heckj): Okay - so I get it working, but holy crap that was a pain
     // in butt. It would be SO much easier if Result acted like a classic Promise
     // instead of forcing the switch to evaluate the result. It's seriously not
@@ -53,7 +54,7 @@ public protocol Interpretable {
 
 // AST enums: Expression, LiteralExpression, UnaryExpression, OperatorExpression
 extension Expression: Interpretable {
-    public func evaluate() -> Result<RuntimeValue, LoxRuntimeError> {
+    public func evaluate() -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .literal(litexpr):
             return litexpr.evaluate()
@@ -67,21 +68,21 @@ extension Expression: Interpretable {
                 return .failure(err)
             }
             guard let runtimeValue = val else {
-                return .failure(LoxRuntimeError.notImplemented)
+                return .failure(RuntimeError.notImplemented)
             }
 
             switch unaryexpr {
             case let .minus(token):
                 switch runtimeValue {
                 case .boolean(_), .string(_), .none:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'minus' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'minus' these types
                 case let .number(value):
                     return .success(RuntimeValue.number(value: -value))
                 }
             case let .not(token):
                 switch runtimeValue {
                 case .number(_), .string(_), .none:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'minus' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'minus' these types
                 case let .boolean(value):
                     return .success(RuntimeValue.boolean(value: !value))
                 }
@@ -112,10 +113,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval - rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Multiply(token):
@@ -125,10 +126,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval * rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Divide(token):
@@ -138,10 +139,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval / rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
                 }
 
             case let .Add(token):
@@ -152,7 +153,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval + rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't 'add' these types from others
+                        return .failure(RuntimeError.oops(token)) // can't 'add' these types from others
                     }
                 // concatenate the strings
                 case let .string(leftval):
@@ -160,10 +161,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.string(value: leftval + rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't 'add' these types from others
+                        return .failure(RuntimeError.oops(token)) // can't 'add' these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to 'add' these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to 'add' these types
                 }
 
             case let .LessThan(token):
@@ -174,7 +175,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -182,10 +183,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .LessThanOrEqual(token):
@@ -196,7 +197,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -204,10 +205,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .GreaterThan(token):
@@ -218,7 +219,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -226,10 +227,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .GreaterThanOrEqual(token):
@@ -240,7 +241,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -248,10 +249,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .Equals(token):
@@ -262,7 +263,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -270,7 +271,7 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the bools
                 case let .boolean(leftval):
@@ -278,10 +279,10 @@ extension Expression: Interpretable {
                     case let .boolean(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
 
             case let .NotEquals(token):
@@ -292,7 +293,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -300,7 +301,7 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 // compare the bools
                 case let .boolean(leftval):
@@ -308,41 +309,43 @@ extension Expression: Interpretable {
                     case let .boolean(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(LoxRuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
                     }
                 default:
-                    return .failure(LoxRuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
                 }
             }
         // binary
         case let .grouping(expr):
             return expr.evaluate()
-        case .variable(_):
-            <#code#>
+        case .variable:
+            print("FOO")
+            return .failure(.notImplemented)
+            // https://craftinginterpreters.com/statements-and-state.html#interpreting-global-variables
         }
     }
 }
 
 extension LiteralExpression: Interpretable {
-    public func evaluate() -> Result<RuntimeValue, LoxRuntimeError> {
+    public func evaluate() -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .number(token):
             switch token.literal {
             case .none:
-                return .failure(LoxRuntimeError.oops(token))
+                return .failure(RuntimeError.oops(token))
             case .string:
-                return .failure(LoxRuntimeError.oops(token))
+                return .failure(RuntimeError.oops(token))
             case let .number(value: value):
                 return .success(RuntimeValue.number(value: value))
             }
         case let .string(token):
             switch token.literal {
             case .none:
-                return .failure(LoxRuntimeError.oops(token))
+                return .failure(RuntimeError.oops(token))
             case let .string(value: value):
                 return .success(RuntimeValue.string(value: value))
             case .number:
-                return .failure(LoxRuntimeError.oops(token))
+                return .failure(RuntimeError.oops(token))
             }
         case .trueToken:
             return .success(RuntimeValue.boolean(value: true))
@@ -355,11 +358,11 @@ extension LiteralExpression: Interpretable {
 }
 
 public protocol RuntimeEvaluation {
-    func execute() -> Result<Int, LoxRuntimeError>
+    func execute() -> Result<Int, RuntimeError>
 }
 
 extension Statement: RuntimeEvaluation {
-    public func execute() -> Result<Int, LoxRuntimeError> {
+    public func execute() -> Result<Int, RuntimeError> {
         switch self {
         case let .printStatement(expr):
             let result = expr.evaluate() // _ is a RuntimeValue
@@ -371,13 +374,15 @@ extension Statement: RuntimeEvaluation {
                 return .failure(err)
             }
         default:
-            return .failure(LoxRuntimeError.notImplemented)
+            return .failure(RuntimeError.notImplemented)
         }
         return .success(0)
     }
 }
 
 public class Interpretter {
+    
+    private var environment: Environment = Environment()
     private func pass() {}
     public func interpretStatements(_ statements: [Statement]) {
         for statement in statements {
@@ -403,4 +408,21 @@ public class Interpretter {
 //            return .failure(LoxRuntimeError.notImplemented) // unknown error actually
 //        }
 //    }
+}
+
+public final class Environment {
+    var values: [String: AnyObject] = [:]
+
+    public func define(_ name: String, value: AnyObject) {
+        // by not checking to see if the name already exists,
+        // we support "overwriting it" in the program flow for Lox
+        values[name] = value
+    }
+
+    public func get(_ name: Token) throws -> AnyObject {
+        if let something = values[name.lexeme] {
+            return something
+        }
+        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+    }
 }

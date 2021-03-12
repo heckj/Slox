@@ -65,7 +65,7 @@ public enum Lox {
         report(line: line, example: "", message: message)
     }
 
-    public static func runtimeError(_ err: LoxRuntimeError) {
+    public static func runtimeError(_ err: RuntimeError) {
         switch err {
         case .notImplemented:
             print("RuntimeError: Not Implemented")
