@@ -36,6 +36,12 @@ import Foundation
   primary        → NUMBER | STRING | "true" | "false" | "nil"
                  | "(" expression ")" ;
 
+ Updated grammar, identifiers, Chapter 8
+ 
+ primary        → "true" | "false" | "nil"
+                | NUMBER | STRING
+                | "(" expression ")"
+                | IDENTIFIER ;
   */
 
 class Parser {
@@ -108,7 +114,7 @@ class Parser {
     }
 
     //    primary        → NUMBER | STRING | "true" | "false" | "nil"
-    //                   | "(" expression ")" ;
+    //                   | "(" expression ")" | IDENTIFIER;
     private func primary() throws -> Expression {
         if match(TokenType.FALSE) {
             return Expression.literal(.falseToken(previous()))
@@ -125,9 +131,12 @@ class Parser {
         if match(TokenType.NUMBER) {
             return Expression.literal(.number(previous()))
         }
+        if match(TokenType.IDENTIFIER) {
+            return Expression.variable(previous())
+        }
         if match(TokenType.LEFT_PAREN) {
             let expr = try expression()
-            try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
+            _ = try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
             return Expression.grouping(expr)
         }
         throw error(peek(), message: "Expect expression.")
@@ -140,15 +149,41 @@ class Parser {
         return try expressionStatement()
     }
 
+    private func declaration() throws -> Statement? {
+        do {
+            if match(.VAR) {
+                return try variableDeclaration()
+            }
+            return try statement()
+        } catch {
+            // expected one of ParserError
+            synchronize()
+            return nil
+        }
+    }
+
+    private func variableDeclaration() throws -> Statement {
+        let variableToken: Token = try consume(.IDENTIFIER, message: "Expect variable name.")
+        var initializer: Expression?
+        if match(.EQUAL) {
+            initializer = try expression()
+        }
+        guard let anInitializer = initializer else {
+            throw ParserError.unparsableExpression(tokens[current])
+        }
+        _ = try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
+        return Statement.variable(variableToken, anInitializer)
+    }
+
     private func printStatement() throws -> Statement {
         let value: Expression = try expression()
-        try consume(.SEMICOLON, message: "Expect ';' after value.")
+        _ = try consume(.SEMICOLON, message: "Expect ';' after value.")
         return Statement.printStatement(value)
     }
 
     private func expressionStatement() throws -> Statement {
         let value: Expression = try expression()
-        try consume(.SEMICOLON, message: "Expect ';' after value.")
+        _ = try consume(.SEMICOLON, message: "Expect ';' after value.")
         return Statement.expressionStatement(value)
     }
 
@@ -158,8 +193,11 @@ class Parser {
         var statements: [Statement] = []
         do {
             while !isAtEnd() {
-                try statements.append(statement())
+                if let dec = try declaration() {
+                    statements.append(dec)
+                }
             }
+
         } catch ParserError.syntaxError(_, _) {
             return statements // maybe bad idea - error handling w/ statements?
         } catch {
@@ -171,10 +209,9 @@ class Parser {
     // helper functions for the parser
     // - moving around the list of tokens and checking them
 
-    private func consume(_ type: TokenType, message: String) throws {
+    private func consume(_ type: TokenType, message: String) throws -> Token {
         if check(type) {
-            _ = advance()
-            return
+            return advance()
         }
         throw ParserError.syntaxError(peek(), message: message)
     }

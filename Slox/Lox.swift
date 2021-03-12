@@ -48,6 +48,9 @@ public enum Lox {
 //        for token in tokenlist {
 //            print(token)
 //        }
+//        for (x, n) in source.enumerated() {
+//            print(" \(n) at character index \(x)")
+//        }
         print("Scanner generated tokens: \(tokenlist)")
         let parser = Parser(tokenlist)
         let statements = parser.parse()

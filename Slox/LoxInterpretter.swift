@@ -317,6 +317,8 @@ extension Expression: Interpretable {
         // binary
         case let .grouping(expr):
             return expr.evaluate()
+        case .variable(_):
+            <#code#>
         }
     }
 }

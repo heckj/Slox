@@ -24,13 +24,18 @@ import Foundation
  operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
                 | "+"  | "-"  | "*" | "/" ;
 
- program        → statement* EOF ;
+ program        → declaration* EOF ;
+
+ declaration    → varDecl
+                | statement ;
 
  statement      → exprStmt
                 | printStmt ;
 
  exprStmt       → expression ";" ;
  printStmt      → "print" expression ";" ;
+ varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
+
  */
 
 // public indirect enum Program {
@@ -39,12 +44,14 @@ import Foundation
 public indirect enum Statement {
     case expressionStatement(Expression)
     case printStatement(Expression)
+    case variable(Token, Expression)
 }
 
 enum ParserError: Error {
     case invalidOperatorToken(Token)
     case invalidUnaryToken(Token)
     case syntaxError(Token, message: String)
+    case unparsableExpression(Token)
 }
 
 public indirect enum Expression: CustomStringConvertible {
@@ -52,12 +59,14 @@ public indirect enum Expression: CustomStringConvertible {
         switch self {
         case let .literal(exp):
             return "\(exp)"
-        case let .unary(type, exp):
-            return "( \(type) \(exp) )"
+        case let .unary(unaryexp, exp):
+            return "( \(unaryexp) \(exp) )"
         case let .binary(lhs, op, rhs):
             return "( \(op) \(lhs) \(rhs) )"
         case let .grouping(exp):
             return "(group \(exp))"
+        case let .variable(tok):
+            return "\(tok.lexeme)"
         }
     }
 
@@ -65,6 +74,7 @@ public indirect enum Expression: CustomStringConvertible {
     case unary(UnaryExpression, Expression)
     case binary(Expression, OperatorExpression, Expression)
     case grouping(Expression)
+    case variable(Token)
 }
 
 public indirect enum LiteralExpression: CustomStringConvertible {
