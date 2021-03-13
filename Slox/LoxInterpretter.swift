@@ -6,13 +6,13 @@
 //
 
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
-// pending: https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
+// pending: https://craftinginterpreters.com/statements-and-state.html#scope
 
 import Foundation
 
 public enum RuntimeError: Error {
     case notImplemented
-    case oops(_ token: Token) // TODO: - remove this catch-all and replace with useful runtime errors
+    case typeMismatch(_ token: Token, message: String = "")
     case undefinedVariable(_ token: Token, message: String = "")
 }
 
@@ -89,14 +89,14 @@ extension Expression: Interpretable {
             case let .minus(token):
                 switch runtimeValue {
                 case .boolean(_), .string(_), .none:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'minus' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
                 case let .number(value):
                     return .success(RuntimeValue.number(value: -value))
                 }
             case let .not(token):
                 switch runtimeValue {
                 case .number(_), .string(_), .none:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'minus' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
                 case let .boolean(value):
                     return .success(RuntimeValue.boolean(value: !value))
                 }
@@ -127,10 +127,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval - rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
                 }
 
             case let .Multiply(token):
@@ -140,10 +140,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval * rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
                 }
 
             case let .Divide(token):
@@ -153,10 +153,10 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval / rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't 'subtract' these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'subtract' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
                 }
 
             case let .Add(token):
@@ -167,7 +167,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.number(value: leftval + rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't 'add' these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
                     }
                 // concatenate the strings
                 case let .string(leftval):
@@ -175,10 +175,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.string(value: leftval + rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't 'add' these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to 'add' these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't add these types"))
                 }
 
             case let .LessThan(token):
@@ -189,7 +189,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -197,10 +197,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval < rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
 
             case let .LessThanOrEqual(token):
@@ -211,7 +211,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -219,10 +219,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval <= rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
 
             case let .GreaterThan(token):
@@ -233,7 +233,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -241,10 +241,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval > rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
 
             case let .GreaterThanOrEqual(token):
@@ -255,7 +255,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -263,10 +263,10 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval >= rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
 
             case let .Equals(token):
@@ -277,7 +277,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -285,7 +285,7 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the bools
                 case let .boolean(leftval):
@@ -293,10 +293,10 @@ extension Expression: Interpretable {
                     case let .boolean(rightval):
                         return .success(RuntimeValue.boolean(value: leftval == rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
 
             case let .NotEquals(token):
@@ -307,7 +307,7 @@ extension Expression: Interpretable {
                     case let .number(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the strings
                 case let .string(leftval):
@@ -315,7 +315,7 @@ extension Expression: Interpretable {
                     case let .string(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 // compare the bools
                 case let .boolean(leftval):
@@ -323,10 +323,10 @@ extension Expression: Interpretable {
                     case let .boolean(rightval):
                         return .success(RuntimeValue.boolean(value: leftval != rightval))
                     default:
-                        return .failure(RuntimeError.oops(token)) // can't compare these types from others
+                        return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                     }
                 default:
-                    return .failure(RuntimeError.oops(token)) // not allowed to compare these types
+                    return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
                 }
             }
         // binary
@@ -348,20 +348,20 @@ extension LiteralExpression: Interpretable {
         case let .number(token):
             switch token.literal {
             case .none:
-                return .failure(RuntimeError.oops(token))
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
             case .string:
-                return .failure(RuntimeError.oops(token))
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
             case let .number(value: value):
                 return .success(RuntimeValue.number(value: value))
             }
         case let .string(token):
             switch token.literal {
             case .none:
-                return .failure(RuntimeError.oops(token))
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
             case let .string(value: value):
                 return .success(RuntimeValue.string(value: value))
             case .number:
-                return .failure(RuntimeError.oops(token))
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
             }
         case .trueToken:
             return .success(RuntimeValue.boolean(value: true))
