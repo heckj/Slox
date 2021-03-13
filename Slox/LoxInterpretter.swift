@@ -58,8 +58,20 @@ extension Expression: Interpretable {
         switch self {
         case let .literal(litexpr):
             return litexpr.evaluate(env)
+
         case let .assign(tok, expr):
-            return assignment()
+            switch expr.evaluate(env) {
+            case let .success(value):
+                do {
+                    try env.assign(tok, value)
+                    return .success(RuntimeValue.none)
+                } catch {
+                    return .failure(RuntimeError.undefinedVariable(tok, message: "\(error)"))
+                }
+            case let .failure(err):
+                return .failure(err)
+            }
+
         case let .unary(unaryexpr, expr):
             var val: RuntimeValue?
 
@@ -438,5 +450,12 @@ public final class Environment {
             return something
         }
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+    }
+
+    public func assign(_ name: Token, _ val: RuntimeValue) throws {
+        guard let _ = values[name.lexeme] else {
+            throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+        }
+        values[name.lexeme] = val
     }
 }
