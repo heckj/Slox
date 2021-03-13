@@ -25,23 +25,21 @@ import Foundation
                  | "+"  | "-"  | "*" | "/" ;
 
  Updated grammar, incorporating precedence, Chapter 6
+ Updated grammar, identifiers, Chapter 8
 
-  expression     → equality ;
+  expression     → assignment ;
+  assignment     → IDENTIFIER "=" assignment
+                 | equality ;
   equality       → comparison ( ( "!=" | "==" ) comparison )* ;
   comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
   term           → factor ( ( "-" | "+" ) factor )* ;
   factor         → unary ( ( "/" | "*" ) unary )* ;
   unary          → ( "!" | "-" ) unary
                  | primary ;
-  primary        → NUMBER | STRING | "true" | "false" | "nil"
-                 | "(" expression ")" ;
-
- Updated grammar, identifiers, Chapter 8
-
- primary        → "true" | "false" | "nil"
-                | NUMBER | STRING
-                | "(" expression ")"
-                | IDENTIFIER ;
+  primary        → "true" | "false" | "nil"
+                 | NUMBER | STRING
+                 | "(" expression ")"
+                 | IDENTIFIER ;
   */
 
 class Parser {
@@ -52,9 +50,27 @@ class Parser {
         self.tokens = tokens
     }
 
-    //    expression     → equality ;
+    //    expression     → assignment ;
     private func expression() throws -> Expression {
-        return try equality()
+        return try assignment()
+    }
+
+    // assignment     → IDENTIFIER "=" assignment
+    //                | equality ;
+    private func assignment() throws -> Expression {
+        let expr = try equality()
+        if match(.EQUAL) {
+            let equals = previous()
+            let value = try assignment()
+
+            switch expr {
+            case let .variable(token):
+                return Expression.assign(token, value)
+            default:
+                throw ParserError.syntaxError(equals, message: "Invalid Assignment Target")
+            }
+        }
+        return expr
     }
 
     //    equality       → comparison ( ( "!=" | "==" ) comparison )* ;

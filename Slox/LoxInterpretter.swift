@@ -6,7 +6,7 @@
 //
 
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
-// pending: https://craftinginterpreters.com/statements-and-state.html#global-variables
+// pending: https://craftinginterpreters.com/statements-and-state.html#assignment-syntax
 
 import Foundation
 
@@ -58,6 +58,8 @@ extension Expression: Interpretable {
         switch self {
         case let .literal(litexpr):
             return litexpr.evaluate(env)
+        case let .assign(tok, expr):
+            return assignment()
         case let .unary(unaryexpr, expr):
             var val: RuntimeValue?
 

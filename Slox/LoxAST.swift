@@ -10,34 +10,6 @@ import Foundation
 // source material translated from Java in https://craftinginterpreters.com/representing-code.html
 // grammar syntax for statements: https://craftinginterpreters.com/statements-and-state.html
 
-/*
- LOX grammar
- expression     → literal
-                | unary
-                | binary
-                | grouping ;
-
- literal        → NUMBER | STRING | "true" | "false" | "nil" ;
- grouping       → "(" expression ")" ;
- unary          → ( "-" | "!" ) expression ;
- binary         → expression operator expression ;
- operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
-                | "+"  | "-"  | "*" | "/" ;
-
- program        → declaration* EOF ;
-
- declaration    → varDecl
-                | statement ;
-
- statement      → exprStmt
-                | printStmt ;
-
- exprStmt       → expression ";" ;
- printStmt      → "print" expression ";" ;
- varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
-
- */
-
 // public indirect enum Program {
 //
 // }
@@ -66,7 +38,9 @@ public indirect enum Expression: CustomStringConvertible {
         case let .grouping(exp):
             return "(group \(exp))"
         case let .variable(tok):
-            return "\(tok.lexeme)"
+            return "var(\(tok.lexeme))"
+        case let .assign(tok, exp):
+            return "\(tok.lexeme) = \(exp)"
         }
     }
 
@@ -75,6 +49,7 @@ public indirect enum Expression: CustomStringConvertible {
     case binary(Expression, OperatorExpression, Expression)
     case grouping(Expression)
     case variable(Token)
+    case assign(Token, Expression)
 }
 
 public indirect enum LiteralExpression: CustomStringConvertible {
