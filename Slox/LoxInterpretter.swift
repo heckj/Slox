@@ -40,7 +40,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 }
 
 public protocol Interpretable {
-    func evaluate() -> Result<RuntimeValue, RuntimeError>
+    func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError>
     // NOTE(heckj): Okay - so I get it working, but holy crap that was a pain
     // in butt. It would be SO much easier if Result acted like a classic Promise
     // instead of forcing the switch to evaluate the result. It's seriously not
@@ -54,14 +54,14 @@ public protocol Interpretable {
 
 // AST enums: Expression, LiteralExpression, UnaryExpression, OperatorExpression
 extension Expression: Interpretable {
-    public func evaluate() -> Result<RuntimeValue, RuntimeError> {
+    public func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .literal(litexpr):
-            return litexpr.evaluate()
+            return litexpr.evaluate(env)
         case let .unary(unaryexpr, expr):
             var val: RuntimeValue?
 
-            switch expr.evaluate() {
+            switch expr.evaluate(env) {
             case let .success(workingval):
                 val = workingval
             case let .failure(err):
@@ -91,14 +91,14 @@ extension Expression: Interpretable {
             var leftRuntimeValue: RuntimeValue?
             var rightRuntimeValue: RuntimeValue?
             // check left and right result, if either failed - propagate it
-            switch expr_l.evaluate() {
+            switch expr_l.evaluate(env) {
             case let .success(leftval):
                 leftRuntimeValue = leftval
             case let .failure(err):
                 return .failure(err)
             }
 
-            switch expr_r.evaluate() {
+            switch expr_r.evaluate(env) {
             case let .failure(err):
                 return .failure(err)
             case let .success(righteval):
@@ -317,17 +317,19 @@ extension Expression: Interpretable {
             }
         // binary
         case let .grouping(expr):
-            return expr.evaluate()
-        case .variable:
-            print("FOO")
-            return .failure(.notImplemented)
-            // https://craftinginterpreters.com/statements-and-state.html#interpreting-global-variables
+            return expr.evaluate(env)
+        case let .variable(token):
+            do {
+                return .success(try env.get(token))
+            } catch {
+                return .failure(RuntimeError.undefinedVariable(token, message: "\(error)"))
+            }
         }
     }
 }
 
 extension LiteralExpression: Interpretable {
-    public func evaluate() -> Result<RuntimeValue, RuntimeError> {
+    public func evaluate(_: Environment) -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .number(token):
             switch token.literal {
@@ -358,14 +360,14 @@ extension LiteralExpression: Interpretable {
 }
 
 public protocol RuntimeEvaluation {
-    func execute() -> Result<Int, RuntimeError>
+    func execute(_ env: Environment) -> Result<Int, RuntimeError>
 }
 
 extension Statement: RuntimeEvaluation {
-    public func execute() -> Result<Int, RuntimeError> {
+    public func execute(_ env: Environment) -> Result<Int, RuntimeError> {
         switch self {
         case let .printStatement(expr):
-            let result = expr.evaluate() // _ is a RuntimeValue
+            let result = expr.evaluate(env) // _ is a RuntimeValue
             switch result {
             case let .success(runtimevalue):
                 print(runtimevalue)
@@ -373,6 +375,16 @@ extension Statement: RuntimeEvaluation {
                 print("ERROR: \(err)")
                 return .failure(err)
             }
+        case let .variable(token, expr):
+            let value = expr.evaluate(env)
+            switch value {
+            case let .success(val):
+                env.define(token.lexeme, value: val)
+                return .success(0)
+            case let .failure(err):
+                return .failure(err)
+            }
+
         default:
             return .failure(RuntimeError.notImplemented)
         }
@@ -381,12 +393,11 @@ extension Statement: RuntimeEvaluation {
 }
 
 public class Interpretter {
-    
-    private var environment: Environment = Environment()
+    private var environment = Environment()
     private func pass() {}
     public func interpretStatements(_ statements: [Statement]) {
         for statement in statements {
-            switch statement.execute() {
+            switch statement.execute(environment) {
             case let .failure(err):
                 print("INTERPRETTER HALTING: \(err)")
                 return
@@ -396,6 +407,7 @@ public class Interpretter {
         }
     }
 
+    // interpret just an expression
 //    public func interpretResult(expr: Expression) -> Result<RuntimeValue, LoxRuntimeError> {
 //        do {
 //            let result = try expr.evaluate()
@@ -411,15 +423,15 @@ public class Interpretter {
 }
 
 public final class Environment {
-    var values: [String: AnyObject] = [:]
+    var values: [String: RuntimeValue] = [:]
 
-    public func define(_ name: String, value: AnyObject) {
+    public func define(_ name: String, value: RuntimeValue) {
         // by not checking to see if the name already exists,
         // we support "overwriting it" in the program flow for Lox
         values[name] = value
     }
 
-    public func get(_ name: Token) throws -> AnyObject {
+    public func get(_ name: Token) throws -> RuntimeValue {
         if let something = values[name.lexeme] {
             return something
         }

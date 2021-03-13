@@ -71,6 +71,8 @@ public enum Lox {
             print("RuntimeError: Not Implemented")
         case let .oops(token):
             print("RuntimeError with \(token) at line \(token.line)")
+        case let .undefinedVariable(token, message: message):
+            print("\(message) at line \(token.line)")
         }
         hadRuntimeError = true
     }
