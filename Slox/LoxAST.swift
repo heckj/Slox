@@ -44,15 +44,15 @@ public indirect enum Expression: CustomStringConvertible {
         }
     }
 
-    case literal(LiteralExpression)
-    case unary(UnaryExpression, Expression)
-    case binary(Expression, OperatorExpression, Expression)
+    case literal(Literal)
+    case unary(Unary, Expression)
+    case binary(Expression, Operator, Expression)
     case grouping(Expression)
     case variable(Token)
     case assign(Token, Expression)
 }
 
-public indirect enum LiteralExpression: CustomStringConvertible {
+public indirect enum Literal: CustomStringConvertible {
     public var description: String {
         switch self {
         case let .number(value):
@@ -75,7 +75,7 @@ public indirect enum LiteralExpression: CustomStringConvertible {
     case nilToken(Token)
 }
 
-public indirect enum UnaryExpression: CustomStringConvertible {
+public indirect enum Unary: CustomStringConvertible {
     public var description: String {
         switch self {
         case .minus:
@@ -88,12 +88,12 @@ public indirect enum UnaryExpression: CustomStringConvertible {
     case minus(Token)
     case not(Token)
 
-    static func fromToken(_ t: Token) throws -> UnaryExpression {
+    static func fromToken(_ t: Token) throws -> Unary {
         switch t.type {
         case .MINUS:
-            return UnaryExpression.minus(t)
+            return Unary.minus(t)
         case .BANG:
-            return UnaryExpression.not(t)
+            return Unary.not(t)
         default:
             Lox.error(0, message: "Invalid operator token")
             throw ParserError.invalidUnaryToken(t)
@@ -101,7 +101,7 @@ public indirect enum UnaryExpression: CustomStringConvertible {
     }
 }
 
-public indirect enum OperatorExpression: CustomStringConvertible {
+public indirect enum Operator: CustomStringConvertible {
     public var description: String {
         switch self {
         case .Equals:
@@ -138,29 +138,29 @@ public indirect enum OperatorExpression: CustomStringConvertible {
     case Multiply(Token)
     case Divide(Token)
 
-    static func fromToken(_ t: Token) throws -> OperatorExpression {
+    static func fromToken(_ t: Token) throws -> Operator {
         switch t.type {
-        case .EQUAL: return OperatorExpression.Equals(t)
+        case .EQUAL: return Operator.Equals(t)
         case .MINUS:
-            return OperatorExpression.Subtract(t)
+            return Operator.Subtract(t)
         case .PLUS:
-            return OperatorExpression.Add(t)
+            return Operator.Add(t)
         case .SLASH:
-            return OperatorExpression.Divide(t)
+            return Operator.Divide(t)
         case .STAR:
-            return OperatorExpression.Multiply(t)
+            return Operator.Multiply(t)
         case .BANG_EQUAL:
-            return OperatorExpression.NotEquals(t)
+            return Operator.NotEquals(t)
         case .EQUAL_EQUAL:
-            return OperatorExpression.Equals(t)
+            return Operator.Equals(t)
         case .GREATER:
-            return OperatorExpression.GreaterThan(t)
+            return Operator.GreaterThan(t)
         case .GREATER_EQUAL:
-            return OperatorExpression.GreaterThanOrEqual(t)
+            return Operator.GreaterThanOrEqual(t)
         case .LESS:
-            return OperatorExpression.LessThan(t)
+            return Operator.LessThan(t)
         case .LESS_EQUAL:
-            return OperatorExpression.LessThanOrEqual(t)
+            return Operator.LessThanOrEqual(t)
         default:
             Lox.error(0, message: "Invalid operator token")
             throw ParserError.invalidOperatorToken(t)

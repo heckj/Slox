@@ -52,7 +52,15 @@ public protocol Interpretable {
     // in parallel and jump ship to a propagating a failure if any of them fail.
 }
 
-// AST enums: Expression, LiteralExpression, UnaryExpression, OperatorExpression
+// Other versions of this, which I think end up being far more readable
+// and understandable, don't do this within a massive switch, but break up
+// the whole thing into sub-functions (private func...) for each kind of
+// statement. Expressions each get "evaluated" - with a function named akin
+// to the type of expression - e.g. evaluateUnary(unary: Unary) -> RuntimeValue
+// Two other versions of this in swift that are worth looking at for comparsions:
+// - https://github1s.com/danielctull/lox
+// - https://github1s.com/hashemi/slox
+
 extension Expression: Interpretable {
     public func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError> {
         switch self {
@@ -342,7 +350,7 @@ extension Expression: Interpretable {
     }
 }
 
-extension LiteralExpression: Interpretable {
+extension Literal: Interpretable {
     public func evaluate(_: Environment) -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .number(token):

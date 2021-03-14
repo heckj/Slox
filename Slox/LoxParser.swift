@@ -80,7 +80,7 @@ class Parser {
         while match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL) {
             let op: Token = previous()
             let right: Expression = try comparison()
-            expr = try Expression.binary(expr, OperatorExpression.fromToken(op), right)
+            expr = try Expression.binary(expr, Operator.fromToken(op), right)
         }
         return expr
     }
@@ -91,7 +91,7 @@ class Parser {
         while match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL) {
             let op: Token = previous()
             let right: Expression = try term()
-            expr = try Expression.binary(expr, OperatorExpression.fromToken(op), right)
+            expr = try Expression.binary(expr, Operator.fromToken(op), right)
         }
         return expr
     }
@@ -102,7 +102,7 @@ class Parser {
         while match(TokenType.MINUS, TokenType.PLUS) {
             let op: Token = previous()
             let right: Expression = try factor()
-            expr = try Expression.binary(expr, OperatorExpression.fromToken(op), right)
+            expr = try Expression.binary(expr, Operator.fromToken(op), right)
         }
         return expr
     }
@@ -113,7 +113,7 @@ class Parser {
         while match(TokenType.SLASH, TokenType.STAR) {
             let op: Token = previous()
             let right: Expression = try unary()
-            expr = try Expression.binary(expr, OperatorExpression.fromToken(op), right)
+            expr = try Expression.binary(expr, Operator.fromToken(op), right)
         }
         return expr
     }
@@ -124,7 +124,7 @@ class Parser {
         if match(TokenType.BANG, TokenType.MINUS) {
             let op: Token = previous()
             let right: Expression = try unary()
-            return try Expression.unary(UnaryExpression.fromToken(op), right)
+            return try Expression.unary(Unary.fromToken(op), right)
         }
         return try primary()
     }
