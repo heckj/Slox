@@ -69,10 +69,12 @@ public enum Lox {
         switch err {
         case .notImplemented:
             print("RuntimeError: Not Implemented")
-        case let .oops(token):
-            print("RuntimeError with \(token) at line \(token.line)")
+        case let .typeMismatch(token, message: message):
+            print("Type mismatch with \(token) at line \(token.line): \(message)")
         case let .undefinedVariable(token, message: message):
             print("\(message) at line \(token.line)")
+        case .unexpectedNullValue:
+            print("RuntimeError: Unexpected null in resolved optional")
         }
         hadRuntimeError = true
     }
