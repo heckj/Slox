@@ -62,6 +62,7 @@ final class Scanner {
         return current >= source.endIndex
     }
 
+    @discardableResult
     private func advance() -> Character {
         // if we're at the end of the string, return a NUL character and return
         // without advancing the index forward
@@ -100,7 +101,7 @@ final class Scanner {
         // increment the cursor to find the bounds of the string
         while peek() != "\"", !isAtEnd() {
             if peek() == "\n" { line += 1 }
-            _ = advance()
+            advance()
         }
         if isAtEnd() {
             Lox.error(line, message: "Unterminated string.")
@@ -108,7 +109,7 @@ final class Scanner {
         }
 
         // The closing " character
-        _ = advance()
+        advance()
         let value = source[source.index(after: start) ... source.index(before: current)]
         addToken(TokenType.STRING, literal: String(value))
     }
@@ -116,13 +117,13 @@ final class Scanner {
     private func number() {
         // increment the cursor to find the bounds of the number
         while peek().isNumber {
-            _ = advance()
+            advance()
         }
-        if (peek() == ".") && peekNext().isNumber {
+        if peek() == ".", peekNext().isNumber {
             // Consume the '.'
-            _ = advance()
+            advance()
             while peek().isNumber {
-                _ = advance()
+                advance()
             }
         }
         guard let value = Double(source[start ... source.index(before: current)]) else {
@@ -135,7 +136,7 @@ final class Scanner {
     private func identifier() {
         // increment the cursor to find the bounds of the identifier
         while peek().isIdentifier {
-            _ = advance()
+            advance()
         }
         let text = source[start ... source.index(before: current)]
         if let type = reservedWords[String(text)] {
@@ -164,8 +165,8 @@ final class Scanner {
         case ">": addToken(match("=") ? .GREATER_EQUAL : .GREATER)
         case "/": if match("/") {
                 // represents a comment - ignored content until the end of the line
-                while (!peek().isNewline) && !isAtEnd() {
-                    _ = advance()
+                while !peek().isNewline, !isAtEnd() {
+                    advance()
                 }
             } else {
                 addToken(.SLASH)

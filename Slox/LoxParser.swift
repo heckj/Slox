@@ -152,7 +152,7 @@ class Parser {
         }
         if match(TokenType.LEFT_PAREN) {
             let expr = try expression()
-            _ = try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
+            try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
             return Expression.grouping(expr)
         }
         throw error(peek(), message: "Expect expression.")
@@ -187,19 +187,19 @@ class Parser {
         guard let anInitializer = initializer else {
             throw ParserError.unparsableExpression(tokens[current])
         }
-        _ = try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
+        try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
         return Statement.variable(variableToken, anInitializer)
     }
 
     private func printStatement() throws -> Statement {
         let value: Expression = try expression()
-        _ = try consume(.SEMICOLON, message: "Expect ';' after value.")
+        try consume(.SEMICOLON, message: "Expect ';' after value.")
         return Statement.printStatement(value)
     }
 
     private func expressionStatement() throws -> Statement {
         let value: Expression = try expression()
-        _ = try consume(.SEMICOLON, message: "Expect ';' after value.")
+        try consume(.SEMICOLON, message: "Expect ';' after value.")
         return Statement.expressionStatement(value)
     }
 
@@ -225,6 +225,7 @@ class Parser {
     // helper functions for the parser
     // - moving around the list of tokens and checking them
 
+    @discardableResult
     private func consume(_ type: TokenType, message: String) throws -> Token {
         if check(type) {
             return advance()
@@ -232,6 +233,7 @@ class Parser {
         throw ParserError.syntaxError(peek(), message: message)
     }
 
+    @discardableResult
     private func advance() -> Token {
         if !isAtEnd() {
             current += 1
@@ -261,7 +263,7 @@ class Parser {
     private func match(_ token: TokenType...) -> Bool {
         for type in token {
             if check(type) {
-                _ = advance()
+                advance()
                 return true
             }
         }
@@ -276,7 +278,7 @@ class Parser {
     }
 
     private func synchronize() {
-        _ = advance()
+        advance()
 
         while !isAtEnd() {
             if previous().type == TokenType.SEMICOLON {
@@ -286,7 +288,7 @@ class Parser {
             case .CLASS, .FUN, .VAR, .FOR, .IF, .WHILE, .PRINT, .RETURN:
                 return
             default:
-                _ = advance()
+                advance()
             }
         }
     }
