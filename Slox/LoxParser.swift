@@ -180,15 +180,16 @@ class Parser {
 
     private func variableDeclaration() throws -> Statement {
         let variableToken: Token = try consume(.IDENTIFIER, message: "Expect variable name.")
-        var initializer: Expression?
+        let initializer: Expression
+
         if match(.EQUAL) {
             initializer = try expression()
-        }
-        guard let anInitializer = initializer else {
+        } else {
             throw ParserError.unparsableExpression(tokens[current])
         }
+        
         try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
-        return Statement.variable(variableToken, anInitializer)
+        return Statement.variable(variableToken, initializer)
     }
 
     private func printStatement() throws -> Statement {

@@ -85,13 +85,12 @@ extension Expression: Interpretable {
     }
 
     private func evaluateBinary(expr_l: Expression, expr_op: Operator, expr_r: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
-        var maybeResolvedLeftExpression: RuntimeValue?
-        var maybeResolvedRightExpression: RuntimeValue?
-
+        let leftValue: RuntimeValue
+        let rightValue: RuntimeValue
         // check left and right result, if either failed - propagate it
         switch expr_l.evaluate(env) {
-        case let .success(leftval):
-            maybeResolvedLeftExpression = leftval
+        case let .success(resolvedExpression):
+            leftValue = resolvedExpression
         case let .failure(err):
             return .failure(err)
         }
@@ -99,16 +98,8 @@ extension Expression: Interpretable {
         switch expr_r.evaluate(env) {
         case let .failure(err):
             return .failure(err)
-        case let .success(righteval):
-            maybeResolvedRightExpression = righteval
-        }
-
-        // convert back to non-optional values
-        guard let leftValue = maybeResolvedLeftExpression else {
-            return .failure(.unexpectedNullValue)
-        }
-        guard let rightValue = maybeResolvedRightExpression else {
-            return .failure(.unexpectedNullValue)
+        case let .success(resolvedExpression):
+            rightValue = resolvedExpression
         }
 
         switch expr_op {
@@ -380,16 +371,12 @@ extension Expression: Interpretable {
     }
 
     private func evaluateUnary(_ unary: Unary, expr: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
-        var val: RuntimeValue?
-
+        let runtimeValue: RuntimeValue
         switch expr.evaluate(env) {
         case let .success(workingval):
-            val = workingval
+            runtimeValue = workingval
         case let .failure(err):
             return .failure(err)
-        }
-        guard let runtimeValue = val else {
-            return .failure(RuntimeError.notImplemented)
         }
 
         switch unary {
