@@ -13,12 +13,20 @@ import Foundation
 /*
  Original grammar, chapter 5:
  Updated grammar, incorporating precedence, Chapter 6
- Updated grammar, identifiers, Chapter 8
+ Updated grammar, statements, identifiers, and state, Chapter 8
+ Updated grammer, control flow, Chapter 9
+
+  program        → statement* EOF ;
 
   statement      → exprStmt
+                 | ifStmt
                  | printStmt
                  | block ;
 
+  ifStmt         → "if" "(" expression ")" statement
+                 ( "else" statement )? ;
+  exprStmt       → expression ";" ;
+  printStmt      → "print" expression ";" ;
   block          → "{" declaration* "}" ;
 
   expression     → assignment ;
@@ -44,6 +52,7 @@ public indirect enum Statement {
     case printStatement(Expression)
     case variable(Token, Expression)
     case block([Statement])
+    case ifStatement(Expression, Statement, Statement?)
 }
 
 public indirect enum Expression: CustomStringConvertible {

@@ -133,6 +133,9 @@ class Parser {
     }
 
     private func statement() throws -> Statement {
+        if match(.IF) {
+            return try ifStatement()
+        }
         if match(.PRINT) {
             return try printStatement()
         }
@@ -193,8 +196,19 @@ class Parser {
         return statements
     }
 
-    // feh: Error handling in Swift:
-    // https://docs.swift.org/swift-book/LanguageGuide/ErrorHandling.html
+    private func ifStatement() throws -> Statement {
+        try consume(.LEFT_PAREN, message: "Expect '(' after 'if'.")
+        let condition = try expression()
+        try consume(.RIGHT_PAREN, message: "Expect ')' after if condition.")
+
+        let thenBranch = try statement()
+        var elseBranch: Statement?
+        if match(.ELSE) {
+            elseBranch = try statement()
+        }
+        return Statement.ifStatement(condition, thenBranch, elseBranch)
+    }
+
     func parse() -> [Statement] {
         var statements: [Statement] = []
         do {

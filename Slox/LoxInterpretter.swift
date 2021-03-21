@@ -38,6 +38,19 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     case number(value: Double)
     case boolean(value: Bool)
     case none
+
+    public var truthy: Bool {
+        switch self {
+        case .none:
+            return false
+        case let .string(value: value):
+            return value.count > 0
+        case let .number(value: value):
+            return value != 0
+        case let .boolean(value: value):
+            return value
+        }
+    }
 }
 
 public final class Environment {
@@ -98,16 +111,37 @@ public class Interpretter {
 
     public func interpretStatements(_ statements: [Statement]) throws {
         for statement in statements {
-            switch statement {
-            case let .printStatement(expr):
-                try executePrint(expr)
-            case let .variable(token, expr):
-                try executeVariable(token, expr)
-            case let .block(statements):
-                try executeBlock(statements, Environment(enclosing: environment))
-            case let .expressionStatement(expr):
-                try executeExpression(expr)
+            try execute(statement)
+        }
+    }
+
+    private func execute(_ statement: Statement) throws {
+        switch statement {
+        case let .ifStatement(condition, thenBranch, elseBranch):
+            try executeIf(condition, thenStmt: thenBranch, elseStmt: elseBranch)
+        case let .printStatement(expr):
+            try executePrint(expr)
+        case let .variable(token, expr):
+            try executeVariable(token, expr)
+        case let .block(statements):
+            try executeBlock(statements, Environment(enclosing: environment))
+        case let .expressionStatement(expr):
+            try executeExpression(expr)
+        }
+    }
+
+    private func executeIf(_ condition: Expression, thenStmt: Statement, elseStmt: Statement?) throws {
+        switch condition.evaluate(environment) {
+        case let .success(value):
+            if value.truthy {
+                try execute(thenStmt)
+            } else {
+                if let elseStatement = elseStmt {
+                    try execute(elseStatement)
+                }
             }
+        case let .failure(err):
+            throw err
         }
     }
 
@@ -146,18 +180,4 @@ public class Interpretter {
         environment = env
         try interpretStatements(statements)
     }
-
-    // interpret just an expression
-//    public func interpretResult(expr: Expression) -> Result<RuntimeValue, LoxRuntimeError> {
-//        do {
-//            let result = try expr.evaluate()
-//            return .success(result)
-//        } catch LoxRuntimeError.notImplemented {
-//            return .failure(LoxRuntimeError.notImplemented)
-//        } catch let LoxRuntimeError.oops(token) {
-//            return .failure(LoxRuntimeError.oops(token))
-//        } catch {
-//            return .failure(LoxRuntimeError.notImplemented) // unknown error actually
-//        }
-//    }
 }
