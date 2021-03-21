@@ -74,24 +74,13 @@ public final class Environment {
                 try enclosing?.assign(name, val)
                 return
             } else {
+                // No enclosing environment, so we can't assign the variable - it was
+                // never defined, so we bail out here.
                 throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
             }
         }
         values[name.lexeme] = val
     }
-}
-
-public protocol Interpretable {
-    func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError>
-    // NOTE(heckj): Okay - so I get it working, but holy crap that was a pain
-    // in butt. It would be SO much easier if Result acted like a classic Promise
-    // instead of forcing the switch to evaluate the result. It's seriously not
-    // meant for chaining, so in the resulting implementation here is an
-    // indention-from-hell scenario.
-    // async/await MIGHT make this better, but really it begs for a promise-style
-    // library rather than the fundamental Result type. A couple of places, the
-    // binary and unary expressions specifically, I want to evaluate 2 or 3 promises
-    // in parallel and jump ship to a propagating a failure if any of them fail.
 }
 
 // Other versions of this, which I think end up being far more readable
@@ -103,52 +92,59 @@ public protocol Interpretable {
 // - https://github1s.com/danielctull/lox
 // - https://github1s.com/hashemi/slox
 
-public protocol RuntimeEvaluation {
-    func execute(_ env: Environment) -> Result<Int, RuntimeError>
-}
-
-extension Statement: RuntimeEvaluation {
-    public func execute(_ env: Environment) -> Result<Int, RuntimeError> {
-        switch self {
-        case let .printStatement(expr):
-            let result = expr.evaluate(env) // _ is a RuntimeValue
-            switch result {
-            case let .success(runtimevalue):
-                print(runtimevalue)
-            case let .failure(err):
-                print("ERROR: \(err)")
-                return .failure(err)
-            }
-        case let .variable(token, expr):
-            let value = expr.evaluate(env)
-            switch value {
-            case let .success(val):
-                env.define(token.lexeme, value: val)
-                return .success(0)
-            case let .failure(err):
-                return .failure(err)
-            }
-
-        default:
-            return .failure(RuntimeError.notImplemented)
-        }
-        return .success(0)
-    }
-}
-
 public class Interpretter {
     private var environment = Environment()
     private func pass() {}
-    public func interpretStatements(_ statements: [Statement]) {
+
+    public func interpretStatements(_ statements: [Statement]) throws {
         for statement in statements {
-            switch statement.execute(environment) {
-            case let .failure(err):
-                print("INTERPRETTER HALTING: \(err)")
-                return
-            case .success:
-                pass()
+            switch statement {
+            case let .printStatement(expr):
+                try executePrint(expr)
+            case let .variable(token, expr):
+                try executeVariable(token, expr)
+            case let .block(statements):
+                try executeBlock(statements, Environment(enclosing: environment))
+            case let .expressionStatement(expr):
+                try executeExpression(expr)
             }
         }
+    }
+
+    private func executeExpression(_ expr: Expression) throws {
+        switch expr.evaluate(environment) {
+        case .success:
+            pass()
+        case let .failure(err):
+            throw err
+        }
+    }
+
+    private func executePrint(_ expr: Expression) throws {
+        switch expr.evaluate(environment) {
+        case let .success(runtimevalue):
+            print(runtimevalue)
+        case let .failure(err):
+            throw err
+        }
+    }
+
+    private func executeVariable(_ token: Token, _ expr: Expression) throws {
+        switch expr.evaluate(environment) {
+        case let .success(val):
+            environment.define(token.lexeme, value: val)
+        case let .failure(err):
+            throw err
+        }
+    }
+
+    private func executeBlock(_ statements: [Statement], _ env: Environment) throws {
+        let previous = environment
+        defer {
+            self.environment = previous
+        }
+        environment = env
+        try interpretStatements(statements)
     }
 
     // interpret just an expression

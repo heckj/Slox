@@ -10,6 +10,32 @@ import Foundation
 // source material translated from Java in https://craftinginterpreters.com/representing-code.html
 // grammar syntax for statements: https://craftinginterpreters.com/statements-and-state.html
 
+/*
+ Original grammar, chapter 5:
+ Updated grammar, incorporating precedence, Chapter 6
+ Updated grammar, identifiers, Chapter 8
+
+  statement      → exprStmt
+                 | printStmt
+                 | block ;
+
+  block          → "{" declaration* "}" ;
+
+  expression     → assignment ;
+  assignment     → IDENTIFIER "=" assignment
+                 | equality ;
+  equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+  term           → factor ( ( "-" | "+" ) factor )* ;
+  factor         → unary ( ( "/" | "*" ) unary )* ;
+  unary          → ( "!" | "-" ) unary
+                 | primary ;
+  primary        → "true" | "false" | "nil"
+                 | NUMBER | STRING
+                 | "(" expression ")"
+                 | IDENTIFIER ;
+  */
+
 // public indirect enum Program {
 //
 // }
@@ -17,6 +43,7 @@ public indirect enum Statement {
     case expressionStatement(Expression)
     case printStatement(Expression)
     case variable(Token, Expression)
+    case block([Statement])
 }
 
 public indirect enum Expression: CustomStringConvertible {
@@ -161,7 +188,7 @@ public indirect enum Operator: CustomStringConvertible {
     }
 }
 
-extension Expression: Interpretable {
+extension Expression {
     public func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError> {
         switch self {
         case let .literal(literal):

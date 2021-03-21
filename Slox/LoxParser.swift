@@ -9,39 +9,6 @@
 
 import Foundation
 
-/*
- Original grammar, chapter 5:
-
-  expression     → literal
-                 | unary
-                 | binary
-                 | grouping ;
-
-  literal        → NUMBER | STRING | "true" | "false" | "nil" ;
-  grouping       → "(" expression ")" ;
-  unary          → ( "-" | "!" ) expression ;
-  binary         → expression operator expression ;
-  operator       → "==" | "!=" | "<" | "<=" | ">" | ">="
-                 | "+"  | "-"  | "*" | "/" ;
-
- Updated grammar, incorporating precedence, Chapter 6
- Updated grammar, identifiers, Chapter 8
-
-  expression     → assignment ;
-  assignment     → IDENTIFIER "=" assignment
-                 | equality ;
-  equality       → comparison ( ( "!=" | "==" ) comparison )* ;
-  comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
-  term           → factor ( ( "-" | "+" ) factor )* ;
-  factor         → unary ( ( "/" | "*" ) unary )* ;
-  unary          → ( "!" | "-" ) unary
-                 | primary ;
-  primary        → "true" | "false" | "nil"
-                 | NUMBER | STRING
-                 | "(" expression ")"
-                 | IDENTIFIER ;
-  */
-
 enum ParserError: Error {
     case invalidOperatorToken(Token)
     case invalidUnaryToken(Token)
@@ -169,6 +136,10 @@ class Parser {
         if match(.PRINT) {
             return try printStatement()
         }
+        if match(.LEFT_BRACE) {
+            return try Statement.block(block())
+        }
+
         return try expressionStatement()
     }
 
@@ -209,6 +180,17 @@ class Parser {
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
         return Statement.expressionStatement(value)
+    }
+
+    private func block() throws -> [Statement] {
+        var statements: [Statement] = []
+        while !check(.RIGHT_BRACE), !isAtEnd() {
+            if let nextstatement = try declaration() {
+                statements.append(nextstatement)
+            }
+        }
+        try consume(.RIGHT_BRACE, message: "Expect '}' after block.")
+        return statements
     }
 
     // feh: Error handling in Swift:

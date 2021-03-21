@@ -58,7 +58,11 @@ public enum Lox {
         if hadError {
             return
         }
-        interpretter.interpretStatements(statements)
+        do {
+            try interpretter.interpretStatements(statements)
+        } catch {
+            print("INTERPRETTER HALTING: \(error)")
+        }
     }
 
     public static func error(_ line: Int, message: String) {
