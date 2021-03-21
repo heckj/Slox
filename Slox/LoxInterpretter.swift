@@ -140,7 +140,7 @@ public class Interpretter {
     }
 
     private func executeWhile(_ cond: Expression, _ body: Statement) throws {
-        switch cond.evaluate(environment) {
+        switch evaluate(cond) {
         case .success:
             try execute(body)
         case .failure:
@@ -149,7 +149,7 @@ public class Interpretter {
     }
 
     private func executeIf(_ condition: Expression, thenStmt: Statement, elseStmt: Statement?) throws {
-        switch condition.evaluate(environment) {
+        switch evaluate(condition) {
         case let .success(value):
             if value.truthy {
                 try execute(thenStmt)
@@ -164,7 +164,7 @@ public class Interpretter {
     }
 
     private func executeExpression(_ expr: Expression) throws {
-        switch expr.evaluate(environment) {
+        switch evaluate(expr) {
         case .success:
             pass()
         case let .failure(err):
@@ -173,7 +173,7 @@ public class Interpretter {
     }
 
     private func executePrint(_ expr: Expression) throws {
-        switch expr.evaluate(environment) {
+        switch evaluate(expr) {
         case let .success(runtimevalue):
             print(runtimevalue)
         case let .failure(err):
@@ -182,7 +182,7 @@ public class Interpretter {
     }
 
     private func executeVariable(_ token: Token, _ expr: Expression) throws {
-        switch expr.evaluate(environment) {
+        switch evaluate(expr) {
         case let .success(val):
             environment.define(token.lexeme, value: val)
         case let .failure(err):
@@ -197,5 +197,431 @@ public class Interpretter {
         }
         environment = env
         try interpretStatements(statements)
+    }
+
+    // MARK: Evaluate Expressions...
+
+    public func evaluate(_ expr: Expression) -> Result<RuntimeValue, RuntimeError> {
+        switch expr {
+        case let .literal(literal):
+            return evaluateLiteral(literal)
+
+        case let .assign(tok, expr):
+            return evaluateAssign(tok, expr: expr)
+
+        case let .unary(unary, expr):
+            return evaluateUnary(unary, expr: expr)
+
+        case let .binary(lhs, op, rhs):
+            return evaluateBinary(lhs, op, rhs)
+
+        case let .grouping(expr):
+            return evaluateGrouping(expr)
+        case let .variable(token):
+            return evaluateVariable(token)
+        case let .logical(lhs, op, rhs):
+            return evaluateLogical(lhs, op, rhs)
+        case let .call(callee, paren, arguments):
+            return evaluateCall(callee, paren, arguments)
+        }
+    }
+
+    private func evaluateCall(_ callee: Expression, _: Token, _ arguments: [Expression]) -> Result<RuntimeValue, RuntimeError> {
+        let calleeResult = evaluate(callee)
+        let calleeResultValue: RuntimeValue
+
+        switch calleeResult {
+        case let .success(val):
+            calleeResultValue = val
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        _ = arguments.map { expr in
+            evaluate(expr)
+        }
+        guard case let RuntimeValue.callable(function) = calleeResultValue else {
+            return .failure(.notCallable(callee: calleeResultValue))
+        }
+
+        guard arguments.count == function.arity else {
+            return .failure(.incorrectArgumentCount(expected: function.arity, actual: arguments.count))
+        }
+
+        return .failure(.notImplemented)
+//        return function.call(this//intepretter, arguments)
+    }
+
+    private func evaluateLogical(_ lhs: Expression, _ op: LogicalOperator, _ rhs: Expression) -> Result<RuntimeValue, RuntimeError> {
+        let left: RuntimeValue
+        switch evaluate(lhs) {
+        case let .success(val):
+            left = val
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        switch (op, left.truthy) {
+        case (.Or, true):
+            return .success(left)
+        case (.And, false):
+            return .success(left)
+        default:
+            return evaluate(rhs)
+        }
+    }
+
+    private func evaluateBinary(_ expr_l: Expression, _ expr_op: Operator, _ expr_r: Expression) -> Result<RuntimeValue, RuntimeError> {
+        let leftValue: RuntimeValue
+        let rightValue: RuntimeValue
+        // check left and right result, if either failed - propagate it
+        switch evaluate(expr_l) {
+        case let .success(resolvedExpression):
+            leftValue = resolvedExpression
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        switch evaluate(expr_r) {
+        case let .failure(err):
+            return .failure(err)
+        case let .success(resolvedExpression):
+            rightValue = resolvedExpression
+        }
+
+        switch expr_op {
+        case let .Subtract(token):
+            return evaluateSubtract(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .Multiply(token):
+            return evaluateMultiply(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .Divide(token):
+            return evaluateDivide(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .Add(token):
+            return evaluateAdd(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .LessThan(token):
+            return evaluateLessThan(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .LessThanOrEqual(token):
+            return evaluateLessThanEqual(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .GreaterThan(token):
+            return evaluateGreaterThan(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .GreaterThanOrEqual(token):
+            return evaluateGreaterThanEqual(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .Equals(token):
+            return evaluateEquals(token, leftValue: leftValue, rightValue: rightValue)
+
+        case let .NotEquals(token):
+            return evaluateNotEquals(token, leftValue: leftValue, rightValue: rightValue)
+        }
+    }
+
+    // Binary operation evaluations
+
+    private func evaluateSubtract(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.number(leftval - rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
+        }
+    }
+
+    private func evaluateMultiply(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.number(leftval * rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
+        }
+    }
+
+    private func evaluateDivide(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.number(leftval / rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'subtract' these types"))
+        }
+    }
+
+    private func evaluateAdd(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // add the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.number(leftval + rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
+            }
+        // concatenate the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.string(leftval + rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't add these types"))
+        }
+    }
+
+    private func evaluateLessThan(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval < rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval < rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateLessThanEqual(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval <= rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval <= rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateGreaterThan(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval > rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval > rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateGreaterThanEqual(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval >= rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval >= rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateEquals(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval == rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval == rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the bools
+        case let .boolean(leftval):
+            switch rightValue {
+            case let .boolean(rightval):
+                return .success(RuntimeValue.boolean(leftval == rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateNotEquals(_ token: Token, leftValue: RuntimeValue, rightValue: RuntimeValue) -> Result<RuntimeValue, RuntimeError> {
+        switch leftValue {
+        // compare the numbers
+        case let .number(leftval):
+            switch rightValue {
+            case let .number(rightval):
+                return .success(RuntimeValue.boolean(leftval != rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the strings
+        case let .string(leftval):
+            switch rightValue {
+            case let .string(rightval):
+                return .success(RuntimeValue.boolean(leftval != rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        // compare the bools
+        case let .boolean(leftval):
+            switch rightValue {
+            case let .boolean(rightval):
+                return .success(RuntimeValue.boolean(leftval != rightval))
+            default:
+                return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+            }
+        default:
+            return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
+        }
+    }
+
+    private func evaluateAssign(_ tok: Token, expr: Expression) -> Result<RuntimeValue, RuntimeError> {
+        switch evaluate(expr) {
+        case let .success(value):
+            do {
+                try environment.assign(tok, value)
+                return .success(RuntimeValue.none)
+            } catch {
+                return .failure(RuntimeError.undefinedVariable(tok, message: "\(error)"))
+            }
+        case let .failure(err):
+            return .failure(err)
+        }
+    }
+
+    private func evaluateUnary(_ unary: Unary, expr: Expression) -> Result<RuntimeValue, RuntimeError> {
+        let runtimeValue: RuntimeValue
+        switch evaluate(expr) {
+        case let .success(workingval):
+            runtimeValue = workingval
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        switch unary {
+        case let .minus(token):
+            switch runtimeValue {
+            case .boolean(_), .string(_), .callable(_), .none:
+                return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
+            case let .number(value):
+                return .success(RuntimeValue.number(-value))
+            }
+        case let .not(token):
+            switch runtimeValue {
+            case .number(_), .string(_), .callable(_), .none:
+                return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
+            case let .boolean(value):
+                return .success(RuntimeValue.boolean(!value))
+            }
+        }
+    }
+
+    private func evaluateGrouping(_ expr: Expression) -> Result<RuntimeValue, RuntimeError> {
+        return evaluate(expr)
+    }
+
+    private func evaluateVariable(_ token: Token) -> Result<RuntimeValue, RuntimeError> {
+        do {
+            return .success(try environment.get(token))
+        } catch {
+            return .failure(RuntimeError.undefinedVariable(token, message: "\(error)"))
+        }
+    }
+
+    private func evaluateLiteral(_ literal: Literal) -> Result<RuntimeValue, RuntimeError> {
+        switch literal {
+        case let .number(token):
+            switch token.literal {
+            case .none:
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
+            case .string:
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
+            case let .number(value: value):
+                return .success(RuntimeValue.number(value))
+            }
+        case let .string(token):
+            switch token.literal {
+            case .none:
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
+            case let .string(value: value):
+                return .success(RuntimeValue.string(value))
+            case .number:
+                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
+            }
+        case .trueToken:
+            return .success(RuntimeValue.boolean(true))
+        case .falseToken:
+            return .success(RuntimeValue.boolean(false))
+        case .nilToken:
+            return .success(RuntimeValue.none)
+        }
     }
 }
