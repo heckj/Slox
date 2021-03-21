@@ -127,6 +127,17 @@ public class Interpretter {
             try executeBlock(statements, Environment(enclosing: environment))
         case let .expressionStatement(expr):
             try executeExpression(expr)
+        case let .whileStatement(condition, body):
+            try executeWhile(condition, body)
+        }
+    }
+
+    private func executeWhile(_ cond: Expression, _ body: Statement) throws {
+        switch cond.evaluate(environment) {
+        case .success:
+            try execute(body)
+        case .failure:
+            return
         }
     }
 

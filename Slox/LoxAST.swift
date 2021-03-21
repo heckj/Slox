@@ -21,12 +21,14 @@ import Foundation
   statement      → exprStmt
                  | ifStmt
                  | printStmt
+                 | whileStmt
                  | block ;
 
   ifStmt         → "if" "(" expression ")" statement
                  ( "else" statement )? ;
   exprStmt       → expression ";" ;
   printStmt      → "print" expression ";" ;
+  whileStmt      → "while" "(" expression ")" statement ;
   block          → "{" declaration* "}" ;
 
   expression     → assignment ;
@@ -55,6 +57,7 @@ public indirect enum Statement {
     case variable(Token, Expression)
     case block([Statement])
     case ifStatement(Expression, Statement, Statement?)
+    case whileStatement(Expression, Statement)
 }
 
 public indirect enum Expression: CustomStringConvertible {

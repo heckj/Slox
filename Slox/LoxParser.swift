@@ -29,7 +29,6 @@ class Parser {
     }
 
     private func assignment() throws -> Expression {
-//        let expr = try equality()
         let expr = try or()
 
         if match(.EQUAL) {
@@ -152,6 +151,9 @@ class Parser {
         if match(.PRINT) {
             return try printStatement()
         }
+        if match(.WHILE) {
+            return try whileStatement()
+        }
         if match(.LEFT_BRACE) {
             return try Statement.block(block())
         }
@@ -220,6 +222,14 @@ class Parser {
             elseBranch = try statement()
         }
         return Statement.ifStatement(condition, thenBranch, elseBranch)
+    }
+
+    private func whileStatement() throws -> Statement {
+        try consume(.LEFT_PAREN, message: "Expect '(' after 'while'.")
+        let condition = try expression()
+        try consume(.RIGHT_PAREN, message: "Expect ')' after condition.")
+        let body = try statement()
+        return Statement.whileStatement(condition, body)
     }
 
     func parse() -> [Statement] {
