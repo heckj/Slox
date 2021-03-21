@@ -42,6 +42,13 @@ import Foundation
                  | IDENTIFIER ;
   */
 
+enum ParserError: Error {
+    case invalidOperatorToken(Token)
+    case invalidUnaryToken(Token)
+    case syntaxError(Token, message: String)
+    case unparsableExpression(Token)
+}
+
 class Parser {
     var tokens: [Token] = []
     var current: Int = 0
@@ -187,7 +194,7 @@ class Parser {
         } else {
             throw ParserError.unparsableExpression(tokens[current])
         }
-        
+
         try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
         return Statement.variable(variableToken, initializer)
     }
