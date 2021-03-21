@@ -24,15 +24,14 @@ class Parser {
         self.tokens = tokens
     }
 
-    //    expression     → assignment ;
     private func expression() throws -> Expression {
         return try assignment()
     }
 
-    // assignment     → IDENTIFIER "=" assignment
-    //                | equality ;
     private func assignment() throws -> Expression {
-        let expr = try equality()
+//        let expr = try equality()
+        let expr = try or()
+
         if match(.EQUAL) {
             let equals = previous()
             let value = try assignment()
@@ -47,7 +46,28 @@ class Parser {
         return expr
     }
 
-    //    equality       → comparison ( ( "!=" | "==" ) comparison )* ;
+    private func or() throws -> Expression {
+        var expr = try and()
+
+        while match(.OR) {
+            let op: Token = previous()
+            let right: Expression = try and()
+            expr = try Expression.logical(expr, LogicalOperator.fromToken(op), right)
+        }
+        return expr
+    }
+
+    private func and() throws -> Expression {
+        var expr = try equality()
+
+        while match(.AND) {
+            let op: Token = previous()
+            let right: Expression = try equality()
+            expr = try Expression.logical(expr, LogicalOperator.fromToken(op), right)
+        }
+        return expr
+    }
+
     private func equality() throws -> Expression {
         var expr: Expression = try comparison()
 
@@ -59,7 +79,6 @@ class Parser {
         return expr
     }
 
-    //    comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
     private func comparison() throws -> Expression {
         var expr: Expression = try term()
         while match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL) {
@@ -70,7 +89,6 @@ class Parser {
         return expr
     }
 
-    //    term           → factor ( ( "-" | "+" ) factor )* ;
     private func term() throws -> Expression {
         var expr: Expression = try factor()
         while match(TokenType.MINUS, TokenType.PLUS) {
@@ -81,7 +99,6 @@ class Parser {
         return expr
     }
 
-    //    factor         → unary ( ( "/" | "*" ) unary )* ;
     private func factor() throws -> Expression {
         var expr: Expression = try unary()
         while match(TokenType.SLASH, TokenType.STAR) {
@@ -92,8 +109,6 @@ class Parser {
         return expr
     }
 
-    //    unary          → ( "!" | "-" ) unary
-    //                   | primary ;
     private func unary() throws -> Expression {
         if match(TokenType.BANG, TokenType.MINUS) {
             let op: Token = previous()
@@ -103,8 +118,6 @@ class Parser {
         return try primary()
     }
 
-    //    primary        → NUMBER | STRING | "true" | "false" | "nil"
-    //                   | "(" expression ")" | IDENTIFIER;
     private func primary() throws -> Expression {
         if match(TokenType.FALSE) {
             return Expression.literal(.falseToken(previous()))

@@ -31,7 +31,9 @@ import Foundation
 
   expression     → assignment ;
   assignment     → IDENTIFIER "=" assignment
-                 | equality ;
+                 | logic_or ;
+  logic_or       → logic_and ( "or" logic_and )* ;
+  logic_and      → equality ( "and" equality )* ;
   equality       → comparison ( ( "!=" | "==" ) comparison )* ;
   comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
   term           → factor ( ( "-" | "+" ) factor )* ;
@@ -70,10 +72,13 @@ public indirect enum Expression: CustomStringConvertible {
             return "var(\(tok.lexeme))"
         case let .assign(tok, exp):
             return "\(tok.lexeme) = \(exp)"
+        case let .logical(lhs, op, rhs):
+            return "\(lhs) \(op) \(rhs)"
         }
     }
 
     case literal(Literal)
+    case logical(Expression, LogicalOperator, Expression)
     case unary(Unary, Expression)
     case binary(Expression, Operator, Expression)
     case grouping(Expression)
@@ -126,6 +131,23 @@ public indirect enum Unary: CustomStringConvertible {
         default:
             Lox.error(0, message: "Invalid operator token")
             throw ParserError.invalidUnaryToken(t)
+        }
+    }
+}
+
+public indirect enum LogicalOperator {
+    case And(Token)
+    case Or(Token)
+
+    static func fromToken(_ t: Token) throws -> LogicalOperator {
+        switch t.type {
+        case .AND:
+            return LogicalOperator.And(t)
+        case .OR:
+            return LogicalOperator.Or(t)
+        default:
+            Lox.error(0, message: "Invalid operator token")
+            throw ParserError.invalidOperatorToken(t)
         }
     }
 }
@@ -210,16 +232,37 @@ extension Expression {
             return evaluateUnary(unary, expr: expr, env: env)
 
         case let .binary(lhs, op, rhs):
-            return evaluateBinary(expr_l: lhs, expr_op: op, expr_r: rhs, env: env)
+            return evaluateBinary(lhs, op, rhs, env: env)
 
         case let .grouping(expr):
             return evaluateGrouping(expr, env: env)
         case let .variable(token):
             return evaluateVariable(token, env: env)
+        case let .logical(lhs, op, rhs):
+            return evaluateLogical(lhs, op, rhs, env: env)
         }
     }
 
-    private func evaluateBinary(expr_l: Expression, expr_op: Operator, expr_r: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
+    private func evaluateLogical(_ lhs: Expression, _ op: LogicalOperator, _ rhs: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
+        let left: RuntimeValue
+        switch lhs.evaluate(env) {
+        case let .success(val):
+            left = val
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        switch (op, left.truthy) {
+        case (.Or, true):
+            return .success(left)
+        case (.And, false):
+            return .success(left)
+        default:
+            return rhs.evaluate(env)
+        }
+    }
+
+    private func evaluateBinary(_ expr_l: Expression, _ expr_op: Operator, _ expr_r: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
         let leftValue: RuntimeValue
         let rightValue: RuntimeValue
         // check left and right result, if either failed - propagate it
