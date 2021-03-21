@@ -44,8 +44,9 @@ import Foundation
   comparison     → term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
   term           → factor ( ( "-" | "+" ) factor )* ;
   factor         → unary ( ( "/" | "*" ) unary )* ;
-  unary          → ( "!" | "-" ) unary
-                 | primary ;
+  unary          → ( "!" | "-" ) unary | call ;
+  call           → primary ( "(" arguments? ")" )* ;
+  arguments      → expression ( "," expression )* ;
   primary        → "true" | "false" | "nil"
                  | NUMBER | STRING
                  | "(" expression ")"
@@ -78,6 +79,8 @@ public indirect enum Expression: CustomStringConvertible {
             return "\(tok.lexeme) = \(exp)"
         case let .logical(lhs, op, rhs):
             return "\(lhs) \(op) \(rhs)"
+        case let .call(callee, paren, arguments):
+            return "\(callee) \(paren) \(arguments)"
         }
     }
 
@@ -85,6 +88,7 @@ public indirect enum Expression: CustomStringConvertible {
     case logical(Expression, LogicalOperator, Expression)
     case unary(Unary, Expression)
     case binary(Expression, Operator, Expression)
+    case call(Expression, Token, [Expression])
     case grouping(Expression)
     case variable(Token)
     case assign(Token, Expression)
