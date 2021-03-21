@@ -40,6 +40,47 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     case none
 }
 
+public final class Environment {
+    var values: [String: RuntimeValue] = [:]
+    var enclosing: Environment?
+
+    init(enclosing: Environment? = nil) {
+        self.enclosing = enclosing
+    }
+
+    public func define(_ name: String, value: RuntimeValue) {
+        // by not checking to see if the name already exists,
+        // we support "overwriting it" in the program flow for Lox
+        values[name] = value
+    }
+
+    public func get(_ name: Token) throws -> RuntimeValue {
+        if let something = values[name.lexeme] {
+            return something
+        }
+        // Look/recurse through any sets of enclosing environments to see
+        // if the variable is defined there.
+        if let something = try enclosing?.get(name) {
+            return something
+        }
+        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+    }
+
+    public func assign(_ name: Token, _ val: RuntimeValue) throws {
+        guard let _ = values[name.lexeme] else {
+            // Wasn't able to find the value within this level of environment,
+            // so before pitching an error, we'll try any enclosing environments.
+            if enclosing != nil {
+                try enclosing?.assign(name, val)
+                return
+            } else {
+                throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+            }
+        }
+        values[name.lexeme] = val
+    }
+}
+
 public protocol Interpretable {
     func evaluate(_ env: Environment) -> Result<RuntimeValue, RuntimeError>
     // NOTE(heckj): Okay - so I get it working, but holy crap that was a pain
@@ -123,28 +164,4 @@ public class Interpretter {
 //            return .failure(LoxRuntimeError.notImplemented) // unknown error actually
 //        }
 //    }
-}
-
-public final class Environment {
-    var values: [String: RuntimeValue] = [:]
-
-    public func define(_ name: String, value: RuntimeValue) {
-        // by not checking to see if the name already exists,
-        // we support "overwriting it" in the program flow for Lox
-        values[name] = value
-    }
-
-    public func get(_ name: Token) throws -> RuntimeValue {
-        if let something = values[name.lexeme] {
-            return something
-        }
-        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
-    }
-
-    public func assign(_ name: Token, _ val: RuntimeValue) throws {
-        guard let _ = values[name.lexeme] else {
-            throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
-        }
-        values[name.lexeme] = val
-    }
 }
