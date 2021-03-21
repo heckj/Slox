@@ -79,6 +79,10 @@ public enum Lox {
             print("\(message) at line \(token.line)")
         case .unexpectedNullValue:
             print("RuntimeError: Unexpected null in resolved optional")
+        case let .notCallable(callee: callee):
+            print("RuntimeError: Attempting to call \(callee), which isn't callable")
+        case let .incorrectArgumentCount(expected: expected, actual: actual):
+            print("RuntimeError: Incorrect number of arguments in function call. Expected \(expected), received \(actual)")
         }
         hadRuntimeError = true
     }

@@ -248,7 +248,35 @@ extension Expression {
             return evaluateVariable(token, env: env)
         case let .logical(lhs, op, rhs):
             return evaluateLogical(lhs, op, rhs, env: env)
+        case let .call(callee, paren, arguments):
+            return evaluateCall(callee, paren, arguments, env: env)
         }
+    }
+
+    private func evaluateCall(_ callee: Expression, _: Token, _ arguments: [Expression], env: Environment) -> Result<RuntimeValue, RuntimeError> {
+        let calleeResult = callee.evaluate(env)
+        let calleeResultValue: RuntimeValue
+
+        switch calleeResult {
+        case let .success(val):
+            calleeResultValue = val
+        case let .failure(err):
+            return .failure(err)
+        }
+
+        _ = arguments.map { expr in
+            expr.evaluate(env)
+        }
+        guard case let RuntimeValue.callable(function) = calleeResultValue else {
+            return .failure(.notCallable(callee: calleeResultValue))
+        }
+
+        guard arguments.count == function.arity else {
+            return .failure(.incorrectArgumentCount(expected: function.arity, actual: arguments.count))
+        }
+
+        return .failure(.notImplemented)
+//        return function.call(this//intepretter, arguments)
     }
 
     private func evaluateLogical(_ lhs: Expression, _ op: LogicalOperator, _ rhs: Expression, env: Environment) -> Result<RuntimeValue, RuntimeError> {
@@ -328,7 +356,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.number(value: leftval - rightval))
+                return .success(RuntimeValue.number(leftval - rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
             }
@@ -342,7 +370,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.number(value: leftval * rightval))
+                return .success(RuntimeValue.number(leftval * rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
             }
@@ -356,7 +384,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.number(value: leftval / rightval))
+                return .success(RuntimeValue.number(leftval / rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't subtract these types from others"))
             }
@@ -371,7 +399,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.number(value: leftval + rightval))
+                return .success(RuntimeValue.number(leftval + rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
             }
@@ -379,7 +407,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.string(value: leftval + rightval))
+                return .success(RuntimeValue.string(leftval + rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't add these types from others"))
             }
@@ -394,7 +422,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval < rightval))
+                return .success(RuntimeValue.boolean(leftval < rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -402,7 +430,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval < rightval))
+                return .success(RuntimeValue.boolean(leftval < rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -417,7 +445,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval <= rightval))
+                return .success(RuntimeValue.boolean(leftval <= rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -425,7 +453,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval <= rightval))
+                return .success(RuntimeValue.boolean(leftval <= rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -440,7 +468,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval > rightval))
+                return .success(RuntimeValue.boolean(leftval > rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -448,7 +476,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval > rightval))
+                return .success(RuntimeValue.boolean(leftval > rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -463,7 +491,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval >= rightval))
+                return .success(RuntimeValue.boolean(leftval >= rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -471,7 +499,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval >= rightval))
+                return .success(RuntimeValue.boolean(leftval >= rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -486,7 +514,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval == rightval))
+                return .success(RuntimeValue.boolean(leftval == rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -494,7 +522,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval == rightval))
+                return .success(RuntimeValue.boolean(leftval == rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -502,7 +530,7 @@ extension Expression {
         case let .boolean(leftval):
             switch rightValue {
             case let .boolean(rightval):
-                return .success(RuntimeValue.boolean(value: leftval == rightval))
+                return .success(RuntimeValue.boolean(leftval == rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -517,7 +545,7 @@ extension Expression {
         case let .number(leftval):
             switch rightValue {
             case let .number(rightval):
-                return .success(RuntimeValue.boolean(value: leftval != rightval))
+                return .success(RuntimeValue.boolean(leftval != rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -525,7 +553,7 @@ extension Expression {
         case let .string(leftval):
             switch rightValue {
             case let .string(rightval):
-                return .success(RuntimeValue.boolean(value: leftval != rightval))
+                return .success(RuntimeValue.boolean(leftval != rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -533,7 +561,7 @@ extension Expression {
         case let .boolean(leftval):
             switch rightValue {
             case let .boolean(rightval):
-                return .success(RuntimeValue.boolean(value: leftval != rightval))
+                return .success(RuntimeValue.boolean(leftval != rightval))
             default:
                 return .failure(RuntimeError.typeMismatch(token, message: "can't compare these types"))
             }
@@ -568,17 +596,17 @@ extension Expression {
         switch unary {
         case let .minus(token):
             switch runtimeValue {
-            case .boolean(_), .string(_), .none:
+            case .boolean(_), .string(_), .callable(_), .none:
                 return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
             case let .number(value):
-                return .success(RuntimeValue.number(value: -value))
+                return .success(RuntimeValue.number(-value))
             }
         case let .not(token):
             switch runtimeValue {
-            case .number(_), .string(_), .none:
+            case .number(_), .string(_), .callable(_), .none:
                 return .failure(RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types"))
             case let .boolean(value):
-                return .success(RuntimeValue.boolean(value: !value))
+                return .success(RuntimeValue.boolean(!value))
             }
         }
     }
@@ -604,21 +632,21 @@ extension Expression {
             case .string:
                 return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
             case let .number(value: value):
-                return .success(RuntimeValue.number(value: value))
+                return .success(RuntimeValue.number(value))
             }
         case let .string(token):
             switch token.literal {
             case .none:
                 return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
             case let .string(value: value):
-                return .success(RuntimeValue.string(value: value))
+                return .success(RuntimeValue.string(value))
             case .number:
                 return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
             }
         case .trueToken:
-            return .success(RuntimeValue.boolean(value: true))
+            return .success(RuntimeValue.boolean(true))
         case .falseToken:
-            return .success(RuntimeValue.boolean(value: false))
+            return .success(RuntimeValue.boolean(false))
         case .nilToken:
             return .success(RuntimeValue.none)
         }

@@ -14,6 +14,8 @@ public enum RuntimeError: Error {
     case notImplemented
     case typeMismatch(_ token: Token, message: String = "")
     case undefinedVariable(_ token: Token, message: String = "")
+    case notCallable(callee: RuntimeValue)
+    case incorrectArgumentCount(expected: Int, actual: Int)
     case unexpectedNullValue
 }
 
@@ -31,12 +33,15 @@ public indirect enum RuntimeValue: CustomStringConvertible {
             return String(value)
         case let .boolean(value: value):
             return String(value)
+        case let .callable(value):
+            return value.description
         }
     }
 
-    case string(value: String)
-    case number(value: Double)
-    case boolean(value: Bool)
+    case string(_ value: String)
+    case number(_ value: Double)
+    case boolean(_ value: Bool)
+    case callable(_ value: Callable)
     case none
 
     public var truthy: Bool {
@@ -49,6 +54,8 @@ public indirect enum RuntimeValue: CustomStringConvertible {
             return value != 0
         case let .boolean(value: value):
             return value
+        default:
+            return true
         }
     }
 }

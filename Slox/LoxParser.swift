@@ -134,7 +134,7 @@ class Parser {
         var arguments: [Expression] = []
         if !check(.RIGHT_PAREN) {
             while match(.COMMA) {
-                if (arguments.count >= 255) {
+                if arguments.count >= 255 {
                     throw error(peek(), message: "Can't have more than 255 arguments.")
                 }
                 arguments.append(try expression())
