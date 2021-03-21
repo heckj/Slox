@@ -145,6 +145,9 @@ class Parser {
     }
 
     private func statement() throws -> Statement {
+        if match(.FOR) {
+            return try forStatement()
+        }
         if match(.IF) {
             return try ifStatement()
         }
@@ -230,6 +233,47 @@ class Parser {
         try consume(.RIGHT_PAREN, message: "Expect ')' after condition.")
         let body = try statement()
         return Statement.whileStatement(condition, body)
+    }
+
+    private func forStatement() throws -> Statement {
+        try consume(.LEFT_PAREN, message: "Expect '(' after 'for    '.")
+        let initializer: Statement?
+        if match(.SEMICOLON) {
+            initializer = nil
+        } else if match(.VAR) {
+            initializer = try variableDeclaration()
+        } else {
+            initializer = try expressionStatement()
+        }
+
+        let condition: Expression
+        if check(.SEMICOLON) {
+            condition = try expression()
+        } else {
+            condition = Expression.literal(.trueToken(nil))
+        }
+        try consume(.SEMICOLON, message: "Expect ';' after loop condition.")
+
+        let increment: Expression?
+        if check(.RIGHT_PAREN) {
+            increment = try expression()
+        } else {
+            increment = nil
+        }
+        try consume(.RIGHT_PAREN, message: "Expect ')' after for clauses.")
+        var body = try statement()
+
+        // Add the increment to the end of the body
+        if let increment = increment {
+            body = .block([body, Statement.expressionStatement(increment)])
+        }
+        // Add the condition
+        body = .whileStatement(condition, body)
+        // Prepend the initializer to before the while loop
+        if let initializer = initializer {
+            body = .block([initializer, body])
+        }
+        return body
     }
 
     func parse() -> [Statement] {

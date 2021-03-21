@@ -19,11 +19,15 @@ import Foundation
   program        → statement* EOF ;
 
   statement      → exprStmt
+                 | forStmt
                  | ifStmt
                  | printStmt
                  | whileStmt
                  | block ;
 
+  forStmt        → "for" "(" ( varDecl | exprStmt | ";" )
+                   expression? ";"
+                   expression? ")" statement ;
   ifStmt         → "if" "(" expression ")" statement
                  ( "else" statement )? ;
   exprStmt       → expression ";" ;
@@ -48,9 +52,6 @@ import Foundation
                  | IDENTIFIER ;
   */
 
-// public indirect enum Program {
-//
-// }
 public indirect enum Statement {
     case expressionStatement(Expression)
     case printStatement(Expression)
@@ -107,7 +108,7 @@ public indirect enum Literal: CustomStringConvertible {
 
     case number(Token) // double rather than token?
     case string(Token) // string rather than token?
-    case trueToken(Token)
+    case trueToken(Token?)
     case falseToken(Token)
     case nilToken(Token)
 }
