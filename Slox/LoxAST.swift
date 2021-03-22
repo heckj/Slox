@@ -227,6 +227,12 @@ public indirect enum Operator: CustomStringConvertible {
     }
 }
 
+public struct Callable {
+    public let description: String
+    let arity: Int
+    let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+}
+
 // translated example code, with every AST node having a copy of the token that generated it...
 // The more direct example allowed for a Token to be inserted for Operator from the Java code,
 // but it's not clear how the underlying data in the AST is used, so I'm hesitant to separate that.
