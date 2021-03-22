@@ -122,19 +122,21 @@ public class Interpretter {
     init() {
         globals.define("clock",
                        value: .callable(
-                        Callable(description: "clock",
-                                 arity: 0,
-                                 call: {
-                                    (_, _) -> RuntimeValue in
-            return RuntimeValue.number(Date().timeIntervalSince1970)}
-                        )
-                       )
-        )
+                           Callable(description: "clock",
+                                    arity: 0,
+                                    call: {
+                                        (_, _) -> RuntimeValue in
+                                        RuntimeValue.number(Date().timeIntervalSince1970)
+                                    })
+                       ))
         environment = globals
-        
     }
 
     private func pass() {}
+
+    private struct Return: Error {
+        let value: RuntimeValue
+    }
 
     public func interpretStatements(_ statements: [Statement]) throws {
         for statement in statements {
@@ -151,12 +153,33 @@ public class Interpretter {
         case let .variable(token, expr):
             try executeVariable(token, expr)
         case let .block(statements):
-            try executeBlock(statements, Environment(enclosing: environment))
+            try executeBlock(statements, using: Environment(enclosing: environment))
         case let .expressionStatement(expr):
             try executeExpression(expr)
         case let .whileStatement(condition, body):
             try executeWhile(condition, body)
+        case let .function(name, params, body):
+            try evaluateFunction(name, params, body)
         }
+    }
+
+    private func evaluateFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
+        let localenv = Environment(enclosing: globals)
+
+        let function = Callable(description: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+
+            for (parameter, argument) in zip(params, arguments) {
+                localenv.define(parameter.lexeme, value: argument)
+            }
+            do {
+                try self.executeBlock(body, using: localenv)
+            } catch let returnError as Return {
+                return returnError.value
+            }
+
+            return .none
+        }
+        environment.define(name.lexeme, value: RuntimeValue.callable(function))
     }
 
     private func executeWhile(_ cond: Expression, _ body: Statement) throws {
@@ -191,12 +214,12 @@ public class Interpretter {
         environment.define(token.lexeme, value: val)
     }
 
-    private func executeBlock(_ statements: [Statement], _ env: Environment) throws {
+    private func executeBlock(_ statements: [Statement], using: Environment) throws {
         let previous = environment
         defer {
             self.environment = previous
         }
-        environment = env
+        environment = using
         try interpretStatements(statements)
     }
 

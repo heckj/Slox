@@ -185,6 +185,24 @@ class Parser {
         throw error(peek(), message: "Expect expression.")
     }
 
+    // MARK: STATEMENTS and DECLARATIONS
+
+    private func declaration() throws -> Statement? {
+        do {
+            if match(.VAR) {
+                return try variableDeclaration()
+            }
+            if match(.FUN) {
+                return try functionDeclaration("function")
+            }
+            return try statement()
+        } catch {
+            // expected one of ParserError
+            synchronize()
+            return nil
+        }
+    }
+
     private func statement() throws -> Statement {
         if match(.FOR) {
             return try forStatement()
@@ -205,19 +223,6 @@ class Parser {
         return try expressionStatement()
     }
 
-    private func declaration() throws -> Statement? {
-        do {
-            if match(.VAR) {
-                return try variableDeclaration()
-            }
-            return try statement()
-        } catch {
-            // expected one of ParserError
-            synchronize()
-            return nil
-        }
-    }
-
     private func variableDeclaration() throws -> Statement {
         let variableToken: Token = try consume(.IDENTIFIER, message: "Expect variable name.")
         let initializer: Expression
@@ -230,6 +235,25 @@ class Parser {
 
         try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
         return Statement.variable(variableToken, initializer)
+    }
+
+    private func functionDeclaration(_ kind: String) throws -> Statement {
+        let name = try consume(.IDENTIFIER, message: "Expect \(kind) name.")
+        try consume(.LEFT_PAREN, message: "Expect '(' after \(kind) name.")
+        var parameters: [Token] = []
+        if !check(.RIGHT_PAREN) {
+            while match(.COMMA) {
+                if parameters.count >= 255 {
+                    throw error(peek(), message: "Can't have more than 255 parameters.")
+                }
+                parameters.append(try consume(.IDENTIFIER, message: "Expect parameter name"))
+            }
+        }
+        try consume(.RIGHT_PAREN, message: "Expect ')' after parameters.")
+
+        try consume(.LEFT_BRACE, message: "Expect '{' before \(kind) body.")
+        let body = try block()
+        return Statement.function(name, parameters, body)
     }
 
     private func printStatement() throws -> Statement {

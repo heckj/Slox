@@ -18,6 +18,13 @@ import Foundation
 
   program        → statement* EOF ;
 
+  declaration    → funDecl
+                 | varDecl
+                 | statement ;
+  funDecl        → "fun" function ;
+  function       → IDENTIFIER "(" parameters? ")" block ;
+  parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+
   statement      → exprStmt
                  | forStmt
                  | ifStmt
@@ -55,6 +62,7 @@ import Foundation
 
 public indirect enum Statement {
     case expressionStatement(Expression)
+    case function(Token, [Token], [Statement])
     case printStatement(Expression)
     case variable(Token, Expression)
     case block([Statement])
