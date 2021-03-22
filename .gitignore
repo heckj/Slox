@@ -2,3 +2,5 @@ Slox.xcodeproj/project.xcworkspace/xcuserdata/
 Slox.xcodeproj/xcuserdata
 .DS_Store
 BuildTools/.build
+.build
+.swiftpm
