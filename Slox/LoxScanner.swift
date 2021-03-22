@@ -40,13 +40,13 @@ final class Scanner {
     private var current: String.Index
     private var line: Int = 1
 
-    init(_ source: String) {
+    public init(_ source: String) {
         self.source = source
         start = source.startIndex
         current = source.startIndex
     }
 
-    func scanTokens() -> [Token] {
+    public func scanTokens() -> [Token] {
         while !isAtEnd() {
             // move the 'start' index cursor forward to our current location when starting a token scan
             start = current

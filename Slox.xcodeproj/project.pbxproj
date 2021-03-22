@@ -13,6 +13,7 @@
 		1A7498A625F4185100C565FE /* LoxAST.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7498A525F4185100C565FE /* LoxAST.swift */; };
 		1A7863DF25F44342008786B0 /* LoxParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7863DE25F44342008786B0 /* LoxParser.swift */; };
 		1A94F1AD25EF0DDF00841C87 /* Lox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A94F1AC25EF0DDF00841C87 /* Lox.swift */; };
+		1A96F7932609582600ADECCD /* LoxAST+String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A96F7922609582600ADECCD /* LoxAST+String.swift */; };
 		1ABE428925F57C32003605DD /* LoxInterpretter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABE428825F57C32003605DD /* LoxInterpretter.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,7 @@
 		1A7498A525F4185100C565FE /* LoxAST.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxAST.swift; sourceTree = "<group>"; };
 		1A7863DE25F44342008786B0 /* LoxParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxParser.swift; sourceTree = "<group>"; };
 		1A94F1AC25EF0DDF00841C87 /* Lox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lox.swift; sourceTree = "<group>"; };
+		1A96F7922609582600ADECCD /* LoxAST+String.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LoxAST+String.swift"; sourceTree = "<group>"; };
 		1ABE428825F57C32003605DD /* LoxInterpretter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoxInterpretter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,6 +78,7 @@
 				1A7498A125F4183700C565FE /* LoxTokens.swift */,
 				1A7498A325F4184400C565FE /* LoxScanner.swift */,
 				1A7498A525F4185100C565FE /* LoxAST.swift */,
+				1A96F7922609582600ADECCD /* LoxAST+String.swift */,
 				1A7863DE25F44342008786B0 /* LoxParser.swift */,
 				1ABE428825F57C32003605DD /* LoxInterpretter.swift */,
 			);
@@ -109,7 +112,7 @@
 		1A4DD43C25EF0D78008D500A /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 1250;
+				LastSwiftUpdateCheck = 1240;
 				LastUpgradeCheck = 1250;
 				TargetAttributes = {
 					1A4DD44325EF0D79008D500A = {
@@ -152,7 +155,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd BuildTools\nSDKROOT=macosx\n# swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat \"$SRCROOT\"\n";
+			shellScript = "cd BuildTools\nSDKROOT=macosx\n# swift package update \n# Uncomment ^this line^ temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat \"$SRCROOT\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -168,6 +171,7 @@
 				1A7498A625F4185100C565FE /* LoxAST.swift in Sources */,
 				1A4DD44825EF0D79008D500A /* main.swift in Sources */,
 				1A94F1AD25EF0DDF00841C87 /* Lox.swift in Sources */,
+				1A96F7932609582600ADECCD /* LoxAST+String.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -70,28 +70,7 @@ public indirect enum Statement {
     case whileStatement(Expression, Statement)
 }
 
-public indirect enum Expression: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case let .literal(exp):
-            return "\(exp)"
-        case let .unary(unaryexp, exp):
-            return "( \(unaryexp) \(exp) )"
-        case let .binary(lhs, op, rhs):
-            return "( \(op) \(lhs) \(rhs) )"
-        case let .grouping(exp):
-            return "(group \(exp))"
-        case let .variable(tok):
-            return "var(\(tok.lexeme))"
-        case let .assign(tok, exp):
-            return "\(tok.lexeme) = \(exp)"
-        case let .logical(lhs, op, rhs):
-            return "\(lhs) \(op) \(rhs)"
-        case let .call(callee, paren, arguments):
-            return "\(callee) \(paren) \(arguments)"
-        }
-    }
-
+public indirect enum Expression {
     case literal(Literal)
     case logical(Expression, LogicalOperator, Expression)
     case unary(Unary, Expression)
@@ -102,39 +81,7 @@ public indirect enum Expression: CustomStringConvertible {
     case assign(Token, Expression)
 }
 
-public indirect enum Literal: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case let .number(value):
-            return "\(value)"
-        case let .string(value):
-            return "\(value)"
-        case .trueToken:
-            return "true"
-        case .falseToken:
-            return "false"
-        case .nilToken:
-            return "nil"
-        }
-    }
-
-    case number(Double) // double rather than token?
-    case string(String) // string rather than token?
-    case trueToken
-    case falseToken
-    case nilToken
-}
-
-public indirect enum Unary: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .minus:
-            return "-"
-        case .not:
-            return "!"
-        }
-    }
-
+public indirect enum Unary {
     case minus(Token)
     case not(Token)
 
@@ -168,32 +115,7 @@ public indirect enum LogicalOperator {
     }
 }
 
-public indirect enum Operator: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .Equals:
-            return "="
-        case .NotEquals:
-            return "!="
-        case .LessThan:
-            return "<"
-        case .LessThanOrEqual:
-            return "<="
-        case .GreaterThan:
-            return ">"
-        case .GreaterThanOrEqual:
-            return ">="
-        case .Add:
-            return "+"
-        case .Subtract:
-            return "-"
-        case .Multiply:
-            return "*"
-        case .Divide:
-            return "/"
-        }
-    }
-
+public indirect enum Operator {
     case Equals(Token)
     case NotEquals(Token)
     case LessThan(Token)
@@ -235,10 +157,12 @@ public indirect enum Operator: CustomStringConvertible {
     }
 }
 
-public struct Callable {
-    public let description: String
-    let arity: Int
-    let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+public indirect enum Literal {
+    case number(Double) // double rather than token?
+    case string(String) // string rather than token?
+    case trueToken
+    case falseToken
+    case nilToken
 }
 
 // translated example code, with every AST node having a copy of the token that generated it...

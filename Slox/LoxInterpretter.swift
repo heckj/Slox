@@ -106,6 +106,12 @@ public final class Environment {
     }
 }
 
+public struct Callable {
+    public let name: String
+    let arity: Int
+    let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+}
+
 // Other versions of this, which I think end up being far more readable
 // and understandable, don't do this within a massive switch, but break up
 // the whole thing into sub-functions (private func...) for each kind of
@@ -122,7 +128,7 @@ public class Interpretter {
     init() {
         globals.define("clock",
                        value: .callable(
-                           Callable(description: "clock",
+                           Callable(name: "clock",
                                     arity: 0,
                                     call: {
                                         (_, _) -> RuntimeValue in
@@ -166,7 +172,7 @@ public class Interpretter {
     private func evaluateFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
         let localenv = Environment(enclosing: globals)
 
-        let function = Callable(description: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+        let function = Callable(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
 
             for (parameter, argument) in zip(params, arguments) {
                 localenv.define(parameter.lexeme, value: argument)

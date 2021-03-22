@@ -9,7 +9,7 @@ import Foundation
 
 // source material translated from Java in https://craftinginterpreters.com/scanning.html
 
-enum TokenType {
+public enum TokenType {
     // single-character tokens
     case LEFT_PAREN, RIGHT_PAREN
     case LEFT_BRACE, RIGHT_BRACE
@@ -37,7 +37,7 @@ enum TokenType {
     case EOF
 }
 
-indirect enum LiteralType {
+public indirect enum LiteralType {
     // The rough equivalent of a Union for swift - a literal is one of these kinds of things,
     // but I didn't want to store each option in the Token class directly, nor make the Token class
     // into an enumeration itself.
