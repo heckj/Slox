@@ -98,9 +98,9 @@ public indirect enum Literal: CustomStringConvertible {
     public var description: String {
         switch self {
         case let .number(value):
-            return "\(value.lexeme)"
+            return "\(value)"
         case let .string(value):
-            return "\(value.lexeme)"
+            return "\(value)"
         case .trueToken:
             return "true"
         case .falseToken:
@@ -110,11 +110,11 @@ public indirect enum Literal: CustomStringConvertible {
         }
     }
 
-    case number(Token) // double rather than token?
-    case string(Token) // string rather than token?
-    case trueToken(Token?)
-    case falseToken(Token)
-    case nilToken(Token)
+    case number(Double) // double rather than token?
+    case string(String) // string rather than token?
+    case trueToken
+    case falseToken
+    case nilToken
 }
 
 public indirect enum Unary: CustomStringConvertible {
@@ -236,14 +236,12 @@ public indirect enum Operator: CustomStringConvertible {
 let expression = Expression.binary(
     Expression.unary(
         .minus(Token(type: .MINUS, lexeme: "-", literal: "-", line: 1)),
-        Expression.literal(.number(Token(type: .NUMBER, lexeme: "123", literal: 123, line: 1)))
+        Expression.literal(.number(123))
     ),
     .Multiply(Token(type: .STAR, lexeme: "*", line: 1)),
     Expression.grouping(
         Expression.literal(
-            .number(
-                Token(type: .NUMBER, lexeme: "45.67", literal: 45.67, line: 1)
-            )
+            .number(45.67)
         )
     )
 )

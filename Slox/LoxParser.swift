@@ -146,19 +146,29 @@ class Parser {
 
     private func primary() throws -> Expression {
         if match(TokenType.FALSE) {
-            return Expression.literal(.falseToken(previous()))
+            return Expression.literal(.falseToken)
         }
         if match(TokenType.TRUE) {
-            return Expression.literal(.trueToken(previous()))
+            return Expression.literal(.trueToken)
         }
         if match(TokenType.NIL) {
-            return Expression.literal(.nilToken(previous()))
+            return Expression.literal(.nilToken)
         }
         if match(TokenType.STRING) {
-            return Expression.literal(.string(previous()))
+            switch previous().literal {
+            case let .string(value: stringValue):
+                return Expression.literal(.string(stringValue))
+            default:
+                throw error(previous(), message: "Token doesn't match expected String literal type")
+            }
         }
         if match(TokenType.NUMBER) {
-            return Expression.literal(.number(previous()))
+            switch previous().literal {
+            case let .number(value: doubleValue):
+                return Expression.literal(.number(doubleValue))
+            default:
+                throw error(previous(), message: "Token doesn't match expected Double literal type")
+            }
         }
         if match(TokenType.IDENTIFIER) {
             return Expression.variable(previous())
@@ -277,7 +287,7 @@ class Parser {
         if check(.SEMICOLON) {
             condition = try expression()
         } else {
-            condition = Expression.literal(.trueToken(nil))
+            condition = Expression.literal(.trueToken)
         }
         try consume(.SEMICOLON, message: "Expect ';' after loop condition.")
 

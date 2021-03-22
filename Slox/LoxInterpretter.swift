@@ -598,24 +598,10 @@ public class Interpretter {
 
     private func evaluateLiteral(_ literal: Literal) -> Result<RuntimeValue, RuntimeError> {
         switch literal {
-        case let .number(token):
-            switch token.literal {
-            case .none:
-                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
-            case .string:
-                return .failure(RuntimeError.typeMismatch(token, message: "type not a number"))
-            case let .number(value: value):
-                return .success(RuntimeValue.number(value))
-            }
-        case let .string(token):
-            switch token.literal {
-            case .none:
-                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
-            case let .string(value: value):
-                return .success(RuntimeValue.string(value))
-            case .number:
-                return .failure(RuntimeError.typeMismatch(token, message: "type not a string"))
-            }
+        case let .number(doubleValue):
+            return .success(RuntimeValue.number(doubleValue))
+        case let .string(stringValue):
+            return .success(RuntimeValue.string(stringValue))
         case .trueToken:
             return .success(RuntimeValue.boolean(true))
         case .falseToken:
