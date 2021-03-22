@@ -116,7 +116,24 @@ public final class Environment {
 // - https://github1s.com/hashemi/slox
 
 public class Interpretter {
-    private var environment = Environment()
+    private let globals = Environment()
+    private var environment: Environment
+
+    init() {
+        globals.define("clock",
+                       value: .callable(
+                        Callable(description: "clock",
+                                 arity: 0,
+                                 call: {
+                                    (_, _) -> RuntimeValue in
+            return RuntimeValue.number(Date().timeIntervalSince1970)}
+                        )
+                       )
+        )
+        environment = globals
+        
+    }
+
     private func pass() {}
 
     public func interpretStatements(_ statements: [Statement]) throws {
