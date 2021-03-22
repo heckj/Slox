@@ -6,6 +6,10 @@
 //
 
 // Chapter 6: https://craftinginterpreters.com/parsing-expressions.html
+// Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
+// Chapter 8: https://craftinginterpreters.com/statements-and-state.html
+// Chapter 9: https://craftinginterpreters.com/control-flow.html
+// Chapter 10: https://craftinginterpreters.com/functions.html
 
 import Foundation
 

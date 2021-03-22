@@ -6,7 +6,10 @@
 //
 
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
-// pending: https://craftinginterpreters.com/statements-and-state.html#scope
+// Chapter 8: https://craftinginterpreters.com/statements-and-state.html
+// Chapter 9: https://craftinginterpreters.com/control-flow.html
+// Chapter 10: https://craftinginterpreters.com/functions.html
+// pending: https://craftinginterpreters.com/functions.html#native-functions
 
 import Foundation
 
