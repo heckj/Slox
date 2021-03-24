@@ -45,4 +45,15 @@ var pi = 3.14159;
         XCTAssertEqual(String(describing: statements[0]), "VAR(IDENTIFIER foo):(1.0)")
         XCTAssertEqual(String(describing: statements[1]), "PRINT(var(foo))")
     }
+    
+    func testParsingExamples() throws {
+        for sourceExample in LOXSource.allExamples {
+            let tokenlist = Slox.Scanner(sourceExample.source).scanTokens()
+            let statements = Parser(tokenlist).parse()
+            XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens) tokens, found \(tokenlist.count) tokens")
+            XCTAssertEqual(statements.count, sourceExample.statements, "expected \(sourceExample.statements) statements, found \(statements.count) in the source:\n\(sourceExample.source)")
+
+        }
+    }
+
 }

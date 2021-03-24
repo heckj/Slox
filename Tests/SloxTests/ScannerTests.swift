@@ -9,7 +9,8 @@ final class ScannerTests: XCTestCase {
             XCTAssertEqual(a.type, b)
         }
     }
-    func testTokenizing() {
+    
+    func testTokenizing() throws {
         let tokens = Slox.Scanner("1+2*3/4-5;").scanTokens()
         XCTAssertEqual(tokens.count, 11)
         let expected: [TokenType] = [
@@ -20,7 +21,7 @@ final class ScannerTests: XCTestCase {
         verifyTokens(tokens, types: expected)
     }
 
-    func testTokenizingMultiline() {
+    func testTokenizingMultiline() throws {
         let source = """
 var foo = 1;
 print foo;
@@ -42,4 +43,10 @@ var pi = 3.14159;
         verifyTokens(tokens, types: expected)
     }
 
+    func testTokenizingExamples() throws {
+        for sourceExample in LOXSource.allExamples {
+            let tokenlist = Slox.Scanner(sourceExample.source).scanTokens()
+            XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens), found \(tokenlist.count) tokens")
+        }
+    }
 }
