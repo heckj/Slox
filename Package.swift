@@ -6,7 +6,7 @@ import PackageDescription
 
 let package = Package(
     name: "LOX",
-    platforms: [ .macOS(.v10_15), .iOS(.v14)],
+    platforms: [.macOS(.v10_15), .iOS(.v14)],
     products: [
         // Products define the executables and libraries a package produces,
         // and make them visible to other packages.
@@ -14,7 +14,7 @@ let package = Package(
             name: "Slox",
             targets: ["Slox"]
         ),
-        .executable(name: "slox-cli", targets: ["cli"])
+        .executable(name: "slox-cli", targets: ["cli"]),
     ],
     dependencies: [
         .package(
@@ -28,8 +28,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Slox"),
                 .product(name: "ArgumentParser",
-                         package: "swift-argument-parser")
-                    
+                         package: "swift-argument-parser"),
             ]
         ),
         // Targets are the basic building blocks of a package.
