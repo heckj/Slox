@@ -52,6 +52,13 @@ final class ParserTests: XCTestCase {
             let statements = Parser(tokenlist).parse()
             XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens) tokens, found \(tokenlist.count) tokens")
             XCTAssertEqual(statements.count, sourceExample.statements, "expected \(sourceExample.statements) statements, found \(statements.count) in the source:\n\(sourceExample.source)")
+            if statements.count != sourceExample.statements {
+                // if there's an issue - show me the generated statements that would
+                // otherwise be run through the interpretter
+                for stmt in statements {
+                    print("  \(stmt)")
+                }
+            }
         }
     }
 }

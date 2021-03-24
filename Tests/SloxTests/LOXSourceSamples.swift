@@ -60,4 +60,210 @@ public enum LOXSource {
         print "many"
     };
     """
+    
+    public static var chap8_1 = """
+    var beverage = "espresso";
+    print beverage;
+    """
+
+    public static var chap8_2 = """
+    print "one";
+    print true;
+    print 2 + 1;
+    """
+
+    public static var chap8_3 = """
+    var monday = true;
+    if (monday) print "Ugh, already?";
+    """
+    public static var chap8_4 = """
+    var monday = true;
+    if (monday) var beverage = "espresso";
+    """ // NOTE: invalid
+    
+    public static var chap8_5 = """
+    var a = "before"
+    print a;
+    var a = "after"
+    print a;
+    """
+    
+    public static var chap8_6 = """
+    // runtime error
+    print a;
+    var a = "too late";
+    """
+    
+    public static var chap8_7 = """
+    var a;
+    print a; // nil
+    """
+    
+    public static var chap8_8 = """
+    var a = 1;
+    var b = 2;
+    print a + b;
+    """
+    
+    public static var chap8_9 = """
+    a = 3; // OK
+    (a) = 3; // parse ERROR
+    """
+    
+    public static var chap8_10 = """
+    var a = 1;
+    print a = 2; // 2
+    """
+    
+    public static var chap8_11 = """
+    {
+      var a = "in block";
+    }
+    print a; // Error: no more 'a' variable
+    """
+
+    public static var chap8_12 = """
+    // shadowing
+    var volume = 11;
+    volume = 0;
+    {
+       var volume = 3*4*5;
+        print volume; // 60
+    }
+    print volume; // 0
+    """
+    
+    public static var chap8_13 = """
+    // parent-pointer tree
+    var global = "outside"
+    {
+        var local = "inside";
+        print global + local;
+    }
+    """
+    
+    public static var chap8_14= """
+    // local variables
+    var a = "global a";
+    var b = "global b";
+    var c = "global c";
+    {
+      var a = "outer a";
+      var b = "outer b";
+      {
+        var a = "inner a";
+        print a;
+        print b;
+        print c;
+      }
+      print a;
+      print b;
+      print c;
+    }
+    print a;
+    print b;
+    print c;
+    """
+    
+    public static var chap9_1 = """
+    print "hi" or 2; // hi
+    print nil or "yes"; // "yes"
+    """
+    
+    public static var chap9_2 = """
+    //for loop
+    for (var i = 0; i < 10; i = i + 1) print i;
+    """
+    
+    public static var chap9_3 = """
+    // lox fibonacci
+    var a = 0;
+    var temp;
+    for (var b = 1; a < 10000; b = temp + b) {
+      print a;
+      temp = a;
+      a = b;
+    }
+    """
+    
+    public static var chap10_1 = """
+    fun add(a, b, c) {
+        print a + b + c;
+    }
+    add(1,2,3,4); // too many
+    add(1,2); // too few
+    """
+    
+    public static var chap10_2 = """
+    var add = fun(a,b) {
+        print a + b
+    };
+    """
+    
+    public static var chap10_3 = """
+    fun count(n) {
+         if (n > 1) count (n - 1);
+         print n;
+    }
+    count(3);
+    """
+
+    public static var chap10_4 = """
+    fun add(a, b) {
+         print a + b;
+    }
+    print add; // <fn add>
+
+    """
+    
+    public static var chap10_5 = """
+    fun sayHi(first, last) {
+      print "Hi, " + first + " " + last + "!";
+    }
+    sayHi("Dear", "Reader");
+
+    """
+    
+    public static var chap10_6 = """
+    fun procedure() {
+      print "don't return anything";
+    }
+    var result = procedure();
+    print result; // ?
+    """
+    
+    public static var chap10_7 = """
+    fun count(n) {
+      while (n < 100) {
+        if (n == 3) return n; // <--
+        print n;
+        n = n + 1;
+      }
+    }
+    count(1);
+    """
+    
+    public static var chap10_8 = """
+    fun fib(n) {
+      if (n <= 1) return n;
+      return fib(n - 2) + fib(n - 1);
+    }
+    for (var i = 0; i < 20; i = i + 1) {
+      print fib(i);
+    }
+    """
+    
+    public static var chap10_9 = """
+    fun makeCounter() {
+      var i = 0;
+      fun count() {
+        i = i + 1;
+        print i;
+      }
+      return count;
+    }
+    var counter = makeCounter();
+    counter(); // "1".
+    counter(); // "2".
+    """
 }
