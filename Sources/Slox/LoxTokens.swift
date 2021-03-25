@@ -37,7 +37,7 @@ public enum TokenType {
     case EOF
 }
 
-public indirect enum LiteralType {
+public indirect enum LiteralType: Equatable {
     // The rough equivalent of a Union for swift - a literal is one of these kinds of things,
     // but I didn't want to store each option in the Token class directly, nor make the Token class
     // into an enumeration itself.

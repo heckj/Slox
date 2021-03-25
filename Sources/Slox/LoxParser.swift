@@ -197,8 +197,13 @@ class Parser {
             }
             return try statement()
         } catch {
+            print(" >> Parser Error: \(error)")
+            print(" >> Error caught at token \(current) of \(tokens.count)")
+            print(" >> Tokenlist: \(tokens)")
+            print(" !! Synchronizing!")
             // expected one of ParserError
             synchronize()
+            print(" >> Recovering at token position \(current)")
             return nil
         }
     }

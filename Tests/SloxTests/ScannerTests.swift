@@ -20,6 +20,29 @@ final class ScannerTests: XCTestCase {
         verifyTokens(tokens, types: expected)
     }
 
+    func testTokenizingIdentifier() throws {
+        let tokens = Slox.Scanner("var a = \"one\";").scanTokens()
+        XCTAssertEqual(tokens.count, 6)
+        let expected: [TokenType] = [
+            .VAR, .IDENTIFIER, .EQUAL, .STRING, .SEMICOLON,
+            .EOF,
+        ]
+        verifyTokens(tokens, types: expected)
+        print("description \(tokens[3].description)")
+        
+        print("lexeme \(tokens[3].lexeme)")
+        XCTAssertEqual(tokens[3].lexeme, "\"one\"")
+        
+        print("line \(tokens[3].line)")
+        XCTAssertEqual(tokens[3].line, 1)
+        
+        print("type \(tokens[3].type)")
+        XCTAssertEqual(tokens[3].type, TokenType.STRING)
+        
+        print("literal \(tokens[3].literal)")
+        XCTAssertEqual(tokens[3].literal, LiteralType.string(value: "\"one\""))
+    }
+
     func testTokenizingMultiline() throws {
         let source = """
         var foo = 1;

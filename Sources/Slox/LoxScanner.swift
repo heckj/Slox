@@ -110,7 +110,7 @@ final class Scanner {
 
         // The closing " character
         advance()
-        let value = source[source.index(after: start) ... source.index(before: current)]
+        let value = source[start ... source.index(before: current)]
         addToken(TokenType.STRING, literal: String(value))
     }
 

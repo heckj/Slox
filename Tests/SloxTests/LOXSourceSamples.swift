@@ -18,6 +18,35 @@ public enum LOXSource {
         LoxExample(source: unaryComparison, tokens: 14, statements: 2),
         LoxExample(source: comparisonPrint, tokens: 20, statements: 3),
         LoxExample(source: logicalComparison, tokens: 31, statements: 4),
+        LoxExample(source: chap8_1, tokens: 9, statements: 2),
+        LoxExample(source: chap8_2, tokens: 12, statements: 3),
+        LoxExample(source: chap8_3, tokens: 13, statements: 2),
+//        LoxExample(source: chap8_4, tokens: 15, statements: 2),
+
+//        LoxExample(source: chap8_5, tokens: 15, statements: 1),
+//        LoxExample(source: chap8_6, tokens: 15, statements: 0),
+//        LoxExample(source: chap8_7, tokens: 9, statements: 2),
+//
+//        LoxExample(source: chap8_8, tokens: 7, statements: 1),
+//        LoxExample(source: chap8_9, tokens: 16, statements: 3),
+//        LoxExample(source: chap8_10, tokens: 11, statements: 1),
+//        LoxExample(source: chap8_11, tokens: 11, statements: 2),
+//
+//        LoxExample(source: chap8_12, tokens: 11, statements: 2),
+//        LoxExample(source: chap8_13, tokens: 27, statements: 4),
+//        LoxExample(source: chap8_14, tokens: 17, statements: 4),
+//        LoxExample(source: chap9_1, tokens: 31, statements: 4),
+//        LoxExample(source: chap9_2, tokens: 31, statements: 4),
+//        LoxExample(source: chap9_3, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_1, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_2, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_3, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_4, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_5, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_6, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_7, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_8, tokens: 31, statements: 4),
+//        LoxExample(source: chap10_9, tokens: 31, statements: 4)
     ]
 
     public static var printSource = "print 42;"
@@ -48,8 +77,8 @@ public enum LOXSource {
     var foo = 1;
     print foo;
     if (foo > 3) {
-        print "many"
-    };
+        print "many";
+    }
     """
 
     public static var logicalComparison = """
@@ -57,10 +86,10 @@ public enum LOXSource {
     var bar = 5;
     print foo;
     if (foo > 3) AND (bar == 5) {
-        print "many"
-    };
+        print "many";
+    }
     """
-    
+
     public static var chap8_1 = """
     var beverage = "espresso";
     print beverage;
@@ -80,41 +109,41 @@ public enum LOXSource {
     var monday = true;
     if (monday) var beverage = "espresso";
     """ // NOTE: invalid
-    
+
     public static var chap8_5 = """
     var a = "before"
     print a;
     var a = "after"
     print a;
     """
-    
+
     public static var chap8_6 = """
     // runtime error
     print a;
     var a = "too late";
     """
-    
+
     public static var chap8_7 = """
     var a;
     print a; // nil
     """
-    
+
     public static var chap8_8 = """
     var a = 1;
     var b = 2;
     print a + b;
     """
-    
+
     public static var chap8_9 = """
     a = 3; // OK
     (a) = 3; // parse ERROR
     """
-    
+
     public static var chap8_10 = """
     var a = 1;
     print a = 2; // 2
     """
-    
+
     public static var chap8_11 = """
     {
       var a = "in block";
@@ -132,7 +161,7 @@ public enum LOXSource {
     }
     print volume; // 0
     """
-    
+
     public static var chap8_13 = """
     // parent-pointer tree
     var global = "outside"
@@ -141,8 +170,8 @@ public enum LOXSource {
         print global + local;
     }
     """
-    
-    public static var chap8_14= """
+
+    public static var chap8_14 = """
     // local variables
     var a = "global a";
     var b = "global b";
@@ -164,17 +193,17 @@ public enum LOXSource {
     print b;
     print c;
     """
-    
+
     public static var chap9_1 = """
     print "hi" or 2; // hi
     print nil or "yes"; // "yes"
     """
-    
+
     public static var chap9_2 = """
     //for loop
     for (var i = 0; i < 10; i = i + 1) print i;
     """
-    
+
     public static var chap9_3 = """
     // lox fibonacci
     var a = 0;
@@ -185,7 +214,7 @@ public enum LOXSource {
       a = b;
     }
     """
-    
+
     public static var chap10_1 = """
     fun add(a, b, c) {
         print a + b + c;
@@ -193,13 +222,13 @@ public enum LOXSource {
     add(1,2,3,4); // too many
     add(1,2); // too few
     """
-    
+
     public static var chap10_2 = """
     var add = fun(a,b) {
         print a + b
     };
     """
-    
+
     public static var chap10_3 = """
     fun count(n) {
          if (n > 1) count (n - 1);
@@ -215,7 +244,7 @@ public enum LOXSource {
     print add; // <fn add>
 
     """
-    
+
     public static var chap10_5 = """
     fun sayHi(first, last) {
       print "Hi, " + first + " " + last + "!";
@@ -223,7 +252,7 @@ public enum LOXSource {
     sayHi("Dear", "Reader");
 
     """
-    
+
     public static var chap10_6 = """
     fun procedure() {
       print "don't return anything";
@@ -231,7 +260,7 @@ public enum LOXSource {
     var result = procedure();
     print result; // ?
     """
-    
+
     public static var chap10_7 = """
     fun count(n) {
       while (n < 100) {
@@ -242,7 +271,7 @@ public enum LOXSource {
     }
     count(1);
     """
-    
+
     public static var chap10_8 = """
     fun fib(n) {
       if (n <= 1) return n;
@@ -252,7 +281,7 @@ public enum LOXSource {
       print fib(i);
     }
     """
-    
+
     public static var chap10_9 = """
     fun makeCounter() {
       var i = 0;

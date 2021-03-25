@@ -5,7 +5,7 @@ final class ParserTests: XCTestCase {
     let source = """
     var foo = 1;
     print foo;
-    if (foo > 3) { print "many" };
+    if (foo > 3) { print "many"; }
     // if (foo < 2);
     var pi = 3.14159;
     """
@@ -41,11 +41,25 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(parser.tokens.count, 25)
         print(parser.tokens)
 
-        XCTAssertEqual(statements.count, 2)
+        XCTAssertEqual(statements.count, 4)
         XCTAssertEqual(String(describing: statements[0]), "VAR(IDENTIFIER foo):(1.0)")
         XCTAssertEqual(String(describing: statements[1]), "PRINT(var(foo))")
+        XCTAssertEqual(String(describing: statements[2]), "IF(( > var(foo) 3.0 )) THEN {{ [PRINT(\"many\")] }} ELSE {nil}")
+        XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER pi):(3.14159)")
     }
 
+    func testParsingIfStatement() throws {
+        let tokenlist = Slox.Scanner(LOXSource.logicalComparison).scanTokens()
+        let statements = Parser(tokenlist).parse()
+        XCTAssertEqual(tokenlist.count, 31, "expected 20 tokens, found \(tokenlist.count) tokens")
+        XCTAssertEqual(statements.count, 4, "expected 3 statements, found \(statements.count)")
+        print("Retrieved statements:")
+        for stmt in statements {
+            print("  \(stmt)")
+        }
+        
+    }
+    
     func testParsingExamples() throws {
         for sourceExample in LOXSource.allExamples {
             let tokenlist = Slox.Scanner(sourceExample.source).scanTokens()
