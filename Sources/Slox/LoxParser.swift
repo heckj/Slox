@@ -25,7 +25,7 @@ struct ErrorInfo: CustomStringConvertible {
     let position: Int
     let syncPosition: Int
     let count: Int
-    
+
     var description: String {
         return "Error \(error) at token \(position) of \(count), recovered at \(syncPosition)."
     }
@@ -60,11 +60,11 @@ struct ErrorInfo: CustomStringConvertible {
 class Parser {
     var tokens: [Token] = []
     var current: Int = 0
-    
+
     var errors: [ErrorInfo] = []
     var omgVerbose = false
     var omgIndent: Int = 0;
-    
+
     private func indent() {
         for _ in 0...omgIndent {
             print(" ", terminator: "")
@@ -194,17 +194,24 @@ class Parser {
 
     private func finishCall(_ callee: Expression) throws -> Expression {
         if omgVerbose { indent(); print( "finishCall()"); omgIndent+=1 }
+        guard case .variable(let variable) = callee else {
+            struct Failure: Error {}
+            throw Failure()
+        }
+
         var arguments: [Expression] = []
+
         if !check(.RIGHT_PAREN) {
-            while match(.COMMA) {
-                if arguments.count >= 255 {
-                    throw error(peek(), message: "Can't have more than 255 arguments.")
-                }
+            repeat {
                 arguments.append(try expression())
+            } while match(.COMMA)
+
+            if arguments.count >= 255 {
+                throw error(peek(), message: "Can't have more than 255 arguments.")
             }
         }
         let paren = try consume(.RIGHT_PAREN, message: "Expect ')' after arguments.")
-        return Expression.call(callee, paren, arguments)
+        return Expression.call(variable, paren, arguments)
     }
 
     private func primary() throws -> Expression {
@@ -249,7 +256,7 @@ class Parser {
             if omgVerbose { indent(); print( "Expression.grouping"); omgIndent=0 }
             return Expression.grouping(expr)
         }
-        if omgVerbose { indent(); print( "NO MORE PRIMARY - BOOK"); omgIndent=0 }
+        if omgVerbose { indent(); print( "NO MORE PRIMARY TOKENS - Error"); omgIndent=0 }
         throw error(peek(), message: "Expect expression.")
     }
 
