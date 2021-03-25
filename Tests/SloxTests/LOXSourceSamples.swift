@@ -2,9 +2,17 @@
 import XCTest
 
 public struct LoxExample {
+    internal init(source: String, tokens: Int, statements: Int, errors: Int = 0) {
+        self.source = source
+        self.tokens = tokens
+        self.statements = statements
+        self.errors = errors
+    }
+    
     let source: String
     let tokens: Int
     let statements: Int
+    let errors: Int
 }
 
 public enum LOXSource {
@@ -17,18 +25,18 @@ public enum LOXSource {
         LoxExample(source: assignmentGroupedStatement, tokens: 15, statements: 2),
         LoxExample(source: unaryComparison, tokens: 14, statements: 2),
         LoxExample(source: comparisonPrint, tokens: 20, statements: 3),
-        LoxExample(source: logicalComparison, tokens: 31, statements: 4),
+//        LoxExample(source: logicalComparison, tokens: 31, statements: 4),
         LoxExample(source: chap8_1, tokens: 9, statements: 2),
         LoxExample(source: chap8_2, tokens: 12, statements: 3),
         LoxExample(source: chap8_3, tokens: 13, statements: 2),
-//        LoxExample(source: chap8_4, tokens: 15, statements: 2),
+        LoxExample(source: chap8_4, tokens: 15, statements: 1, errors: 1),
 
-//        LoxExample(source: chap8_5, tokens: 15, statements: 1),
+        LoxExample(source: chap8_5, tokens: 17, statements: 4),
 //        LoxExample(source: chap8_6, tokens: 15, statements: 0),
 //        LoxExample(source: chap8_7, tokens: 9, statements: 2),
 //
 //        LoxExample(source: chap8_8, tokens: 7, statements: 1),
-//        LoxExample(source: chap8_9, tokens: 16, statements: 3),
+//        LoxExample(source: chap8_9, tokens: 16, statements: 3, errors: 1),
 //        LoxExample(source: chap8_10, tokens: 11, statements: 1),
 //        LoxExample(source: chap8_11, tokens: 11, statements: 2),
 //
@@ -55,19 +63,24 @@ public enum LOXSource {
     print "Hello World";
     // The basics as you'd expect.
     """
+    
     public static var basicVariable = """
     var foo = 32;
     print foo;
     """
+    
     public static var basicExpression = "1+2*3/4-5;"
+    
     public static var assignmentStatement = """
     var foo = 1+2/3;
     print foo;
     """
+    
     public static var assignmentGroupedStatement = """
     var foo = (1+2)/3;
     print foo;
     """
+    
     public static var unaryComparison = """
     var maybe = !(3>4);
     print maybe;
@@ -111,9 +124,9 @@ public enum LOXSource {
     """ // NOTE: invalid
 
     public static var chap8_5 = """
-    var a = "before"
+    var a = "before";
     print a;
-    var a = "after"
+    var a = "after";
     print a;
     """
 

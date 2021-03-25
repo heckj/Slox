@@ -54,11 +54,18 @@ public final class Token: CustomStringConvertible {
     public var description: String {
         switch literal {
         case let .number(value):
-            return "\(type) \(lexeme) \(value)"
+            return "\(type)[\(value)]"
         case let .string(value):
-            return "\(type) \(lexeme) \(value)"
+            return "\(type)[\(value)]"
         case .none:
-            return "\(type) \(lexeme)"
+            switch type {
+            case .IDENTIFIER:
+                return "\(type)[\(self.lexeme)]"
+            case .CLASS, .ELSE, .EOF, .FOR, .FUN, .IF, .VAR, .NIL, .PRINT, .RETURN, .SUPER:
+                return "\(type)"
+            default:
+                return "\(lexeme)"
+            }
         }
     }
 

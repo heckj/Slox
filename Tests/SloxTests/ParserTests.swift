@@ -39,13 +39,13 @@ final class ParserTests: XCTestCase {
         let statements = parser.parse()
         XCTAssertEqual(parser.current, 24)
         XCTAssertEqual(parser.tokens.count, 25)
-        print(parser.tokens)
+//        print(parser.tokens)
 
         XCTAssertEqual(statements.count, 4)
-        XCTAssertEqual(String(describing: statements[0]), "VAR(IDENTIFIER foo):(1.0)")
+        XCTAssertEqual(String(describing: statements[0]), "VAR(IDENTIFIER[foo]):(1.0)")
         XCTAssertEqual(String(describing: statements[1]), "PRINT(var(foo))")
         XCTAssertEqual(String(describing: statements[2]), "IF(( > var(foo) 3.0 )) THEN {{ [PRINT(\"many\")] }} ELSE {nil}")
-        XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER pi):(3.14159)")
+        XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER[pi]):(3.14159)")
     }
 
     func testParsingIfStatement() throws {
@@ -63,9 +63,11 @@ final class ParserTests: XCTestCase {
     func testParsingExamples() throws {
         for sourceExample in LOXSource.allExamples {
             let tokenlist = Slox.Scanner(sourceExample.source).scanTokens()
-            let statements = Parser(tokenlist).parse()
+            let parser = Parser(tokenlist)
+            let statements = parser.parse()
             XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens) tokens, found \(tokenlist.count) tokens")
             XCTAssertEqual(statements.count, sourceExample.statements, "expected \(sourceExample.statements) statements, found \(statements.count) in the source:\n\(sourceExample.source)")
+            XCTAssertEqual(parser.errors.count, 0, "unexpected parse error received:\n\(parser.errors)")
             if statements.count != sourceExample.statements {
                 // if there's an issue - show me the generated statements that would
                 // otherwise be run through the interpretter

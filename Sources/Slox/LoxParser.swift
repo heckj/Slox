@@ -20,9 +20,18 @@ enum ParserError: Error {
     case unparsableExpression(Token)
 }
 
+struct ErrorInfo {
+    let error: Error
+    let position: Int
+    let syncPosition: Int
+    let count: Int
+}
+
 class Parser {
     var tokens: [Token] = []
     var current: Int = 0
+    
+    var errors: [ErrorInfo] = []
 
     init(_ tokens: [Token]) {
         self.tokens = tokens
@@ -197,13 +206,15 @@ class Parser {
             }
             return try statement()
         } catch {
-            print(" >> Parser Error: \(error)")
-            print(" >> Error caught at token \(current) of \(tokens.count)")
-            print(" >> Tokenlist: \(tokens)")
-            print(" !! Synchronizing!")
+            let errorPosition = current
+//            print(" >> Parser Error: \(error)")
+//            print(" >> Error caught at token \(current) of \(tokens.count)")
+//            print(" >> Tokenlist: \(tokens)")
+//            print(" !! Synchronizing!")
             // expected one of ParserError
             synchronize()
-            print(" >> Recovering at token position \(current)")
+            self.errors.append(ErrorInfo(error: error, position: errorPosition, syncPosition: current, count: tokens.count))
+//            print(" >> Recovering at token position \(current)")
             return nil
         }
     }
