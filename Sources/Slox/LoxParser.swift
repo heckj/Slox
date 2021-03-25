@@ -194,7 +194,7 @@ class Parser {
 
     private func finishCall(_ callee: Expression) throws -> Expression {
         if omgVerbose { indent(); print( "finishCall()"); omgIndent+=1 }
-        guard case .variable(let variable) = callee else {
+        guard case .variable(let _) = callee else {
             struct Failure: Error {}
             throw Failure()
         }
@@ -211,7 +211,7 @@ class Parser {
             }
         }
         let paren = try consume(.RIGHT_PAREN, message: "Expect ')' after arguments.")
-        return Expression.call(variable, paren, arguments)
+        return Expression.call(callee, paren, arguments)
     }
 
     private func primary() throws -> Expression {
