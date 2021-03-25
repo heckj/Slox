@@ -20,28 +20,68 @@ enum ParserError: Error {
     case unparsableExpression(Token)
 }
 
-struct ErrorInfo {
+struct ErrorInfo: CustomStringConvertible {
     let error: Error
     let position: Int
     let syncPosition: Int
     let count: Int
+    
+    var description: String {
+        return "Error \(error) at token \(position) of \(count), recovered at \(syncPosition)."
+    }
 }
+
+//enum ANSIColors: String, CaseIterable {
+//    case black = "\u{001B}[0;30m"
+//    case red = "\u{001B}[0;31m"
+//    case green = "\u{001B}[0;32m"
+//    case yellow = "\u{001B}[0;33m"
+//    case blue = "\u{001B}[0;34m"
+//    case magenta = "\u{001B}[0;35m"
+//    case cyan = "\u{001B}[0;36m"
+//    case white = "\u{001B}[0;37m"
+//    case reset = "\u{001B}[0;0m"
+//
+//    func name() -> String {
+//        switch self {
+//        case .black: return "Black"
+//        case .red: return "Red"
+//        case .green: return "Green"
+//        case .yellow: return "Yellow"
+//        case .blue: return "Blue"
+//        case .magenta: return "Magenta"
+//        case .cyan: return "Cyan"
+//        case .white: return "White"
+//        case .reset: return "_default_"
+//        }
+//    }
+//}
 
 class Parser {
     var tokens: [Token] = []
     var current: Int = 0
     
     var errors: [ErrorInfo] = []
+    var omgVerbose = false
+    var omgIndent: Int = 0;
+    
+    private func indent() {
+        for _ in 0...omgIndent {
+            print(" ", terminator: "")
+        }
+    }
 
     init(_ tokens: [Token]) {
         self.tokens = tokens
     }
 
     private func expression() throws -> Expression {
+        if omgVerbose { indent(); print( "expression()"); omgIndent+=1 }
         return try assignment()
     }
 
     private func assignment() throws -> Expression {
+        if omgVerbose { indent(); print( "assignment()"); omgIndent+=1 }
         let expr = try or()
 
         if match(.EQUAL) {
@@ -59,6 +99,7 @@ class Parser {
     }
 
     private func or() throws -> Expression {
+        if omgVerbose { indent(); print( "or()"); omgIndent+=1 }
         var expr = try and()
 
         while match(.OR) {
@@ -70,6 +111,8 @@ class Parser {
     }
 
     private func and() throws -> Expression {
+        if omgVerbose { indent(); print( "and()"); omgIndent+=1 }
+
         var expr = try equality()
 
         while match(.AND) {
@@ -81,6 +124,7 @@ class Parser {
     }
 
     private func equality() throws -> Expression {
+        if omgVerbose { indent(); print( "equality()"); omgIndent+=1 }
         var expr: Expression = try comparison()
 
         while match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL) {
@@ -92,6 +136,7 @@ class Parser {
     }
 
     private func comparison() throws -> Expression {
+        if omgVerbose { indent(); print( "comparison()"); omgIndent+=1 }
         var expr: Expression = try term()
         while match(TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL) {
             let op: Token = previous()
@@ -102,6 +147,7 @@ class Parser {
     }
 
     private func term() throws -> Expression {
+        if omgVerbose { indent(); print( "term()"); omgIndent+=1 }
         var expr: Expression = try factor()
         while match(TokenType.MINUS, TokenType.PLUS) {
             let op: Token = previous()
@@ -112,6 +158,7 @@ class Parser {
     }
 
     private func factor() throws -> Expression {
+        if omgVerbose { indent(); print( "factor()"); omgIndent+=1 }
         var expr: Expression = try unary()
         while match(TokenType.SLASH, TokenType.STAR) {
             let op: Token = previous()
@@ -122,6 +169,7 @@ class Parser {
     }
 
     private func unary() throws -> Expression {
+        if omgVerbose { indent(); print( "unary()"); omgIndent+=1 }
         if match(TokenType.BANG, TokenType.MINUS) {
             let op: Token = previous()
             let right: Expression = try unary()
@@ -131,6 +179,7 @@ class Parser {
     }
 
     private func call() throws -> Expression {
+        if omgVerbose { indent(); print( "call()"); omgIndent+=1 }
         var expr = try primary()
 
         while true {
@@ -144,6 +193,7 @@ class Parser {
     }
 
     private func finishCall(_ callee: Expression) throws -> Expression {
+        if omgVerbose { indent(); print( "finishCall()"); omgIndent+=1 }
         var arguments: [Expression] = []
         if !check(.RIGHT_PAREN) {
             while match(.COMMA) {
@@ -158,18 +208,23 @@ class Parser {
     }
 
     private func primary() throws -> Expression {
+        if omgVerbose { indent(); print( "primary()"); omgIndent+=1 }
         if match(TokenType.FALSE) {
+            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
             return Expression.literal(.falseToken)
         }
         if match(TokenType.TRUE) {
+            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
             return Expression.literal(.trueToken)
         }
         if match(TokenType.NIL) {
+            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
             return Expression.literal(.nilToken)
         }
         if match(TokenType.STRING) {
             switch previous().literal {
             case let .string(value: stringValue):
+                if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
                 return Expression.literal(.string(stringValue))
             default:
                 throw error(previous(), message: "Token doesn't match expected String literal type")
@@ -178,25 +233,30 @@ class Parser {
         if match(TokenType.NUMBER) {
             switch previous().literal {
             case let .number(value: doubleValue):
+                if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
                 return Expression.literal(.number(doubleValue))
             default:
                 throw error(previous(), message: "Token doesn't match expected Double literal type")
             }
         }
         if match(TokenType.IDENTIFIER) {
+            if omgVerbose { indent(); print( "Expression.variable"); omgIndent=0 }
             return Expression.variable(previous())
         }
         if match(TokenType.LEFT_PAREN) {
             let expr = try expression()
             try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
+            if omgVerbose { indent(); print( "Expression.grouping"); omgIndent=0 }
             return Expression.grouping(expr)
         }
+        if omgVerbose { indent(); print( "NO MORE PRIMARY - BOOK"); omgIndent=0 }
         throw error(peek(), message: "Expect expression.")
     }
 
     // MARK: STATEMENTS and DECLARATIONS
 
     private func declaration() throws -> Statement? {
+        if omgVerbose { indent(); print( "declaration()"); omgIndent+=1 }
         do {
             if match(.VAR) {
                 return try variableDeclaration()
@@ -206,20 +266,16 @@ class Parser {
             }
             return try statement()
         } catch {
+            if omgVerbose { indent(); print( "RECORDING ERROR"); omgIndent=0 }
             let errorPosition = current
-//            print(" >> Parser Error: \(error)")
-//            print(" >> Error caught at token \(current) of \(tokens.count)")
-//            print(" >> Tokenlist: \(tokens)")
-//            print(" !! Synchronizing!")
-            // expected one of ParserError
             synchronize()
             self.errors.append(ErrorInfo(error: error, position: errorPosition, syncPosition: current, count: tokens.count))
-//            print(" >> Recovering at token position \(current)")
             return nil
         }
     }
 
     private func statement() throws -> Statement {
+        if omgVerbose { indent(); print( "statement()"); omgIndent+=1 }
         if match(.FOR) {
             return try forStatement()
         }
@@ -240,6 +296,8 @@ class Parser {
     }
 
     private func variableDeclaration() throws -> Statement {
+        if omgVerbose { indent(); print( "variableDeclaration()"); omgIndent+=1 }
+
         let variableToken: Token = try consume(.IDENTIFIER, message: "Expect variable name.")
         let initializer: Expression
 
@@ -250,10 +308,12 @@ class Parser {
         }
 
         try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
+        if omgVerbose { indent(); print( "Statement.variable"); omgIndent=0 }
         return Statement.variable(variableToken, initializer)
     }
 
     private func functionDeclaration(_ kind: String) throws -> Statement {
+        if omgVerbose { indent(); print( "functionDeclaration()"); omgIndent+=1 }
         let name = try consume(.IDENTIFIER, message: "Expect \(kind) name.")
         try consume(.LEFT_PAREN, message: "Expect '(' after \(kind) name.")
         var parameters: [Token] = []
@@ -269,22 +329,28 @@ class Parser {
 
         try consume(.LEFT_BRACE, message: "Expect '{' before \(kind) body.")
         let body = try block()
+        if omgVerbose { indent(); print( "Statement.function"); omgIndent=0 }
         return Statement.function(name, parameters, body)
     }
 
     private func printStatement() throws -> Statement {
+        if omgVerbose { indent(); print( "functionDeclaration()"); omgIndent+=1 }
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
+        if omgVerbose { indent(); print( "Statement.printStatement"); omgIndent=0 }
         return Statement.printStatement(value)
     }
 
     private func expressionStatement() throws -> Statement {
+        if omgVerbose { indent(); print( "expressionStatement()"); omgIndent+=1 }
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
+        if omgVerbose { indent(); print( "Statement.expressionStatement"); omgIndent=0 }
         return Statement.expressionStatement(value)
     }
 
     private func block() throws -> [Statement] {
+        if omgVerbose { indent(); print( "block()"); omgIndent+=1 }
         var statements: [Statement] = []
         while !check(.RIGHT_BRACE), !isAtEnd() {
             if let nextstatement = try declaration() {
@@ -292,10 +358,12 @@ class Parser {
             }
         }
         try consume(.RIGHT_BRACE, message: "Expect '}' after block.")
+        if omgVerbose { indent(); print( "[Statement]"); omgIndent=0 }
         return statements
     }
 
     private func ifStatement() throws -> Statement {
+        if omgVerbose { indent(); print( "ifStatement()"); omgIndent+=1 }
         try consume(.LEFT_PAREN, message: "Expect '(' after 'if'.")
         let condition = try expression()
         try consume(.RIGHT_PAREN, message: "Expect ')' after if condition.")
@@ -305,18 +373,22 @@ class Parser {
         if match(.ELSE) {
             elseBranch = try statement()
         }
+        if omgVerbose { indent(); print( "Statement.ifStatement"); omgIndent=0 }
         return Statement.ifStatement(condition, thenBranch, elseBranch)
     }
 
     private func whileStatement() throws -> Statement {
+        if omgVerbose { indent(); print( "whileStatement()"); omgIndent+=1 }
         try consume(.LEFT_PAREN, message: "Expect '(' after 'while'.")
         let condition = try expression()
         try consume(.RIGHT_PAREN, message: "Expect ')' after condition.")
         let body = try statement()
+        if omgVerbose { indent(); print( "Statement.ifStatement"); omgIndent=0 }
         return Statement.whileStatement(condition, body)
     }
 
     private func forStatement() throws -> Statement {
+        if omgVerbose { indent(); print( "forStatement()"); omgIndent+=1 }
         try consume(.LEFT_PAREN, message: "Expect '(' after 'for    '.")
         let initializer: Statement?
         if match(.SEMICOLON) {
@@ -354,6 +426,7 @@ class Parser {
         if let initializer = initializer {
             body = .block([initializer, body])
         }
+        if omgVerbose { indent(); print( "desugared FOR statement"); omgIndent=0 }
         return body
     }
 

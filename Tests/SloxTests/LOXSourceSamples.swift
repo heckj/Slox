@@ -25,7 +25,7 @@ public enum LOXSource {
         LoxExample(source: assignmentGroupedStatement, tokens: 15, statements: 2),
         LoxExample(source: unaryComparison, tokens: 14, statements: 2),
         LoxExample(source: comparisonPrint, tokens: 20, statements: 3),
-//        LoxExample(source: logicalComparison, tokens: 31, statements: 4),
+        LoxExample(source: logicalComparison, tokens: 31, statements: 4),
         LoxExample(source: chap8_1, tokens: 9, statements: 2),
         LoxExample(source: chap8_2, tokens: 12, statements: 3),
         LoxExample(source: chap8_3, tokens: 13, statements: 2),

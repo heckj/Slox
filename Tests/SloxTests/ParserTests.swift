@@ -48,11 +48,42 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER[pi]):(3.14159)")
     }
 
-    func testParsingIfStatement() throws {
-        let tokenlist = Slox.Scanner(LOXSource.logicalComparison).scanTokens()
-        let statements = Parser(tokenlist).parse()
-        XCTAssertEqual(tokenlist.count, 31, "expected 20 tokens, found \(tokenlist.count) tokens")
-        XCTAssertEqual(statements.count, 4, "expected 3 statements, found \(statements.count)")
+    func testParsingLogicalComparison() throws {
+        let snippetOfPain = """
+        if (foo > 3) AND (bar == 5) {
+            print "many";
+        }
+        """
+        let tokenlist = Slox.Scanner(snippetOfPain).scanTokens()
+        let parser = Parser(tokenlist)
+        parser.omgVerbose = true
+        let statements = parser.parse()
+        XCTAssertEqual(tokenlist.count, 18, "expected 18 tokens, found \(tokenlist.count) tokens")
+        XCTAssertEqual(statements.count, 1, "expected 1 statements, found \(statements.count)")
+        XCTAssertEqual(parser.errors.count, 0)
+        if (parser.errors.count != 0) {
+            for err in parser.errors {
+                print(" | \(err)")
+                print(" >> ", terminator: "")
+                for (idx, token) in tokenlist.enumerated() {
+                    if idx != err.position {
+                        print(token, terminator: "")
+                        print(" ", terminator: "")
+                    } else {
+                        print("\u{001B}[0;31m", terminator: "") //red
+                        print(" *>", terminator: "")
+                        print(token, terminator: "")
+                        print("<* ", terminator: "")
+                        print("\u{001B}[0;0m", terminator: "") //reset
+                    }
+                    if token.type == TokenType.SEMICOLON {
+                        print("") // basically printing a newline
+                        print(" >> ", terminator: "")
+                    }
+                }
+                print("") // basically printing a newline
+            }
+        }
         print("Retrieved statements:")
         for stmt in statements {
             print("  \(stmt)")
@@ -67,7 +98,30 @@ final class ParserTests: XCTestCase {
             let statements = parser.parse()
             XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens) tokens, found \(tokenlist.count) tokens")
             XCTAssertEqual(statements.count, sourceExample.statements, "expected \(sourceExample.statements) statements, found \(statements.count) in the source:\n\(sourceExample.source)")
-            XCTAssertEqual(parser.errors.count, 0, "unexpected parse error received:\n\(parser.errors)")
+            XCTAssertEqual(parser.errors.count, sourceExample.errors, "unexpected parse error received:\n\(parser.errors)")
+            if (parser.errors.count != 0) && (sourceExample.errors != parser.errors.count) {
+                for err in parser.errors {
+                    print(" | \(err)")
+                    print(" >> ", terminator: "")
+                    for (idx, token) in tokenlist.enumerated() {
+                        if idx != err.position {
+                            print(token, terminator: "")
+                            print(" ", terminator: "")
+                        } else {
+                            print("\u{001B}[0;31m", terminator: "") //red
+                            print(" *>", terminator: "")
+                            print(token, terminator: "")
+                            print("<* ", terminator: "")
+                            print("\u{001B}[0;0m", terminator: "") //reset
+                        }
+                        if token.type == TokenType.SEMICOLON {
+                            print("") // basically printing a newline
+                            print(" >> ", terminator: "")
+                        }
+                    }
+                    print("") // basically printing a newline
+                }
+            }
             if statements.count != sourceExample.statements {
                 // if there's an issue - show me the generated statements that would
                 // otherwise be run through the interpretter
