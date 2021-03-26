@@ -194,7 +194,7 @@ class Parser {
 
     private func finishCall(_ callee: Expression) throws -> Expression {
         if omgVerbose { indent(); print( "finishCall()"); omgIndent+=1 }
-        guard case .variable(let _) = callee else {
+        guard case .variable(_) = callee else {
             struct Failure: Error {}
             throw Failure()
         }
@@ -468,6 +468,7 @@ class Parser {
     @discardableResult
     private func advance() -> Token {
         if !isAtEnd() {
+            if omgVerbose { indent(); print("ATE \(tokens[current])") }
             current += 1
         }
         return previous()
