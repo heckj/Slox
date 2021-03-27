@@ -26,6 +26,8 @@ extension Expression: CustomStringConvertible {
             return "\(lhs) \(op) \(rhs)"
         case let .call(callee, paren, arguments):
             return "\(callee) \(paren) \(arguments)"
+        case .empty:
+            return "_nil_"
         }
     }
 }

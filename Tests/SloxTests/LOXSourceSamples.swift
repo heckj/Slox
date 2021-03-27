@@ -25,7 +25,7 @@ public enum LOXSource {
         LoxExample(source: assignmentGroupedStatement, tokens: 15, statements: 2),
         LoxExample(source: unaryComparison, tokens: 14, statements: 2),
         LoxExample(source: comparisonPrint, tokens: 20, statements: 3),
-//        LoxExample(source: logicalComparison, tokens: 31, statements: 4),
+        LoxExample(source: logicalComparison, tokens: 33, statements: 4),
         LoxExample(source: chap8_1, tokens: 9, statements: 2),
         LoxExample(source: chap8_2, tokens: 12, statements: 3),
         LoxExample(source: chap8_3, tokens: 13, statements: 2),
@@ -33,15 +33,16 @@ public enum LOXSource {
 
         LoxExample(source: chap8_5, tokens: 17, statements: 4),
         LoxExample(source: chap8_6, tokens: 9, statements: 2),
-//        LoxExample(source: chap8_7, tokens: 7, statements: 1), // parse error
+        
+//        LoxExample(source: chap8_7, tokens: 7, statements: 0), // parse error
 
         LoxExample(source: chap8_8, tokens: 16, statements: 3),
-        LoxExample(source: chap8_9, tokens: 11, statements: 1, errors: 1),
+        LoxExample(source: chap8_9, tokens: 11, statements: 2, errors: 1),
         LoxExample(source: chap8_10, tokens: 11, statements: 2),
         LoxExample(source: chap8_11, tokens: 11, statements: 2),
 
         LoxExample(source: chap8_12, tokens: 27, statements: 4),
-//        LoxExample(source: chap8_13, tokens: 17, statements: 2), // parse error
+        LoxExample(source: chap8_13, tokens: 18, statements: 2),
         LoxExample(source: chap8_14, tokens: 62, statements: 7),
         
         LoxExample(source: chap9_1, tokens: 11, statements: 2),
@@ -100,7 +101,7 @@ public enum LOXSource {
     var foo = 1;
     var bar = 5;
     print foo;
-    if (foo > 3) AND (bar == 5) {
+    if ((foo > 3) AND (bar == 5)) {
         print "many";
     }
     """
@@ -179,7 +180,7 @@ public enum LOXSource {
 
     public static var chap8_13 = """
     // parent-pointer tree
-    var global = "outside"
+    var global = "outside";
     {
         var local = "inside";
         print global + local;

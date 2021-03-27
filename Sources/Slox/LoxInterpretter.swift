@@ -249,6 +249,8 @@ public class Interpretter {
             return try evaluateGrouping(expr)
         case let .variable(token):
             return try evaluateVariable(token)
+        case .empty:
+            return RuntimeValue.none
         case let .logical(lhs, op, rhs):
             return try evaluateLogical(lhs, op, rhs)
         case let .call(callee, paren, arguments):

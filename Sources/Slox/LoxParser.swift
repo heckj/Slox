@@ -121,13 +121,13 @@ class Parser {
         if omgVerbose { indent(); print( "variableDeclaration()"); omgIndent+=1 }
 
         let variableToken: Token = try consume(.IDENTIFIER, message: "Expect variable name.")
-        let initializer: Expression
 
+        let initializer: Expression
         if match(.EQUAL) {
             if omgVerbose { indent(); print( "fork -> expression()") }
             initializer = try expression()
         } else {
-            throw ParserError.unparsableExpression(tokens[current])
+            initializer = Expression.empty
         }
 
         try consume(.SEMICOLON, message: "Expect ';' after variable declaration.")
@@ -632,6 +632,30 @@ class Parser {
         return ParserError.syntaxError(token, message: message)
     }
 
+    public func printErrors() {
+        for err in errors {
+            print(" | \(err)")
+            print(" >> ", terminator: "")
+            for (idx, token) in tokens.enumerated() {
+                if idx != err.position {
+                    print(token, terminator: "")
+                    print(" ", terminator: "")
+                } else {
+                    print("\u{001B}[0;31m", terminator: "") //red
+                    print(" *>", terminator: "")
+                    print(token, terminator: "")
+                    print("<* ", terminator: "")
+                    print("\u{001B}[0;0m", terminator: "") //reset
+                }
+                if token.type == TokenType.SEMICOLON {
+                    print("") // basically printing a newline
+                    print(" >> ", terminator: "")
+                }
+            }
+            print("") // basically printing a newline
+        }
+    }
+    
     private func synchronize() {
         advance()
 

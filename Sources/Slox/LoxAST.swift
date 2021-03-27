@@ -79,6 +79,7 @@ public indirect enum Expression {
     case grouping(Expression)
     case variable(Token)
     case assign(Token, Expression)
+    case empty
 }
 
 public indirect enum Unary {
