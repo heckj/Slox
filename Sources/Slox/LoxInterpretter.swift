@@ -5,11 +5,18 @@
 //  Created by Joseph Heck on 3/7/21.
 //
 
+// Other versions of this in swift that are worth looking at for comparsions:
+//* [alexito4/slox](https://github.com/alexito4/slox)
+//* [eirikvaa/slox](https://github.com/eirikvaa/slox)
+//* [danielctull/slox](https://github.com/danielctull/lox)
+//* [hashemi/bslox](https://github.com/hashemi/bslox) (bytecode)
+//* [hashemi/slox](https://github.com/hashemi/slox)
+
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
 // Chapter 8: https://craftinginterpreters.com/statements-and-state.html
 // Chapter 9: https://craftinginterpreters.com/control-flow.html
 // Chapter 10: https://craftinginterpreters.com/functions.html
-// pending: https://craftinginterpreters.com/functions.html#native-functions
+// Chapter 11: https://craftinginterpreters.com/resolving-and-binding.html (PENDING)
 
 import Foundation
 
@@ -131,12 +138,6 @@ public struct Callable {
 private struct Return: Error {
     let value: RuntimeValue
 }
-
-// Two other versions of this in swift that are worth looking at for comparsions:
-// - https://github1s.com/danielctull/lox
-// - https://github1s.com/hashemi/slox
-
-//    private func pass() {}
 
 // MARK: Interpretter
 

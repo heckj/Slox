@@ -58,8 +58,7 @@ final class IntepretterTests: XCTestCase {
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
             XCTAssertEqual(collectedOutput.count, 0)
-            print(collectedOutput)
-//            XCTAssertEqual(collectedOutput[0], "1.0")
+            // print(collectedOutput)
         }
     }
 
@@ -134,9 +133,9 @@ final class IntepretterTests: XCTestCase {
         // interpretter.omgIndent = 0
         // interpretter.omgVerbose = true
         try interpretter.interpretStatements(statements)
-        print("-----------------------------------------------------")
-        print(interpretter.environment.values)
-        print(interpretter.tickerTape as Any)
+        // print("-----------------------------------------------------")
+        // print(interpretter.environment.values)
+        // print(interpretter.tickerTape as Any)
 
         // base of 'clock'
         // and added the function 'count' from the sample
@@ -148,7 +147,7 @@ final class IntepretterTests: XCTestCase {
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
             XCTAssertEqual(collectedOutput.count, 20)
-            print(collectedOutput)
+            // print(collectedOutput)
             XCTAssertEqual(collectedOutput,
                            ["0.0", "1.0", "1.0", "2.0", "3.0", "5.0",
                             "8.0", "13.0", "21.0", "34.0", "55.0",
