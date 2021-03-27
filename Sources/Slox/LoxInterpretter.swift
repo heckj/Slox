@@ -165,15 +165,28 @@ public class Interpretter {
         case let .whileStatement(condition, body):
             try executeWhile(condition, body)
         case let .function(name, params, body):
-            try evaluateFunction(name, params, body)
+            try executeFunction(name, params, body)
+        case let .returnStatement(keyword, optExpr):
+            try executeReturn(keyword, optExpr)
         }
     }
 
-    private func evaluateFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
+    private func executeReturn(_ keyword: Token, _ expr: Expression?) throws {
+        if let expr = expr {
+            let value = try evaluate(expr)
+            throw Return(value: value)
+        } else {
+            throw Return(value: RuntimeValue.none)
+        }
+    }
+    
+    private func executeFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
         let localenv = Environment(enclosing: globals)
 
         let function = Callable(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
 
+            // pair up the parameter names (variables) and arguments (values) and write them
+            // into the environment created for executing this function.
             for (parameter, argument) in zip(params, arguments) {
                 localenv.define(parameter.lexeme, value: argument)
             }

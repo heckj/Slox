@@ -174,6 +174,10 @@ class Parser {
             if omgVerbose { indent(); print("fork -> printStatement()") }
             return try printStatement()
         }
+        if match(.RETURN) {
+            if omgVerbose { indent(); print("fork -> returnStatement()") }
+            return try returnStatement()
+        }
         if match(.WHILE) {
             if omgVerbose { indent(); print("fork -> whileStatement()") }
             return try whileStatement()
@@ -260,13 +264,28 @@ class Parser {
     }
 
     private func printStatement() throws -> Statement {
-        if omgVerbose { indent(); print("functionDeclaration()"); omgIndent += 1 }
+        if omgVerbose { indent(); print("printStatement()"); omgIndent += 1 }
 
         if omgVerbose { indent(); print("fork -> expression()") }
         let value: Expression = try expression()
         try consume(.SEMICOLON, message: "Expect ';' after value.")
         if omgVerbose { indent(); print("Statement.printStatement"); omgIndent -= 1 }
         return Statement.printStatement(value)
+    }
+
+    private func returnStatement() throws -> Statement {
+        if omgVerbose { indent(); print("returnStatement()"); omgIndent += 1 }
+
+        let keyword = previous()
+        var expr: Expression? = nil
+        if omgVerbose { indent(); print("fork -> expression()") }
+        if !check(.SEMICOLON) {
+            expr = try expression()
+        }
+        
+        try consume(.SEMICOLON, message: "Expect ';' after return value.")
+        if omgVerbose { indent(); print("Statement.returnStatement"); omgIndent -= 1 }
+        return Statement.returnStatement(keyword, expr)
     }
 
     private func expressionStatement() throws -> Statement {
@@ -537,49 +556,6 @@ class Parser {
             if omgVerbose { indent(); print("NO MORE PRIMARY TOKENS - Error") }
             throw ParserError.unexpectedToken(current, [.FALSE, .TRUE, .NIL, .STRING, .NUMBER, .IDENTIFIER, .LEFT_PAREN], message: "Unable to match primary() token")
         }
-
-//        if match(TokenType.FALSE) {
-//            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
-//            return Expression.literal(.falseToken)
-//        }
-//        if match(TokenType.TRUE) {
-//            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
-//            return Expression.literal(.trueToken)
-//        }
-//        if match(TokenType.NIL) {
-//            if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
-//            return Expression.literal(.nilToken)
-//        }
-//        if match(TokenType.STRING) {
-//            switch previous().literal {
-//            case let .string(value: stringValue):
-//                if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
-//                return Expression.literal(.string(stringValue))
-//            default:
-//                throw error(previous(), message: "Token doesn't match expected String literal type")
-//            }
-//        }
-//        if match(TokenType.NUMBER) {
-//            switch previous().literal {
-//            case let .number(value: doubleValue):
-//                if omgVerbose { indent(); print( "Expression.literal"); omgIndent=0 }
-//                return Expression.literal(.number(doubleValue))
-//            default:
-//                throw error(previous(), message: "Token doesn't match expected Double literal type")
-//            }
-//        }
-//        if match(TokenType.IDENTIFIER) {
-//            if omgVerbose { indent(); print( "Expression.variable"); omgIndent=0 }
-//            return Expression.variable(previous())
-//        }
-//        if match(TokenType.LEFT_PAREN) {
-//            let expr = try expression()
-//            try consume(TokenType.RIGHT_PAREN, message: "Expect ')' after expression.")
-//            if omgVerbose { indent(); print( "Expression.grouping"); omgIndent=0 }
-//            return Expression.grouping(expr)
-//        }
-//        if omgVerbose { indent(); print( "NO MORE PRIMARY TOKENS - Error"); omgIndent=0 }
-//        throw error(peek(), message: "Expect expression.")
     }
 
     // helper functions for the parser

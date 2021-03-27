@@ -115,6 +115,11 @@ extension Statement: CustomStringConvertible {
             return "IF(\(ifExpr)) THEN {\(thenStmt)} ELSE {\(String(describing: elseStmt))}"
         case let .whileStatement(expr, stmt):
             return "WHILE(\(expr)) {\(stmt)}"
+        case let .returnStatement(_, expr):
+            if let expr = expr {
+                return "RETURN \(expr)"
+            }
+            return "RETURN none"
         }
     }
 }

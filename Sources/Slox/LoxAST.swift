@@ -29,6 +29,7 @@ import Foundation
                  | forStmt
                  | ifStmt
                  | printStmt
+                 | returnStmt
                  | whileStmt
                  | block ;
 
@@ -39,6 +40,7 @@ import Foundation
                  ( "else" statement )? ;
   exprStmt       → expression ";" ;
   printStmt      → "print" expression ";" ;
+  returnStmt     → "return" expression? ";" ;
   whileStmt      → "while" "(" expression ")" statement ;
   block          → "{" declaration* "}" ;
 
@@ -64,6 +66,7 @@ public indirect enum Statement {
     case expressionStatement(Expression)
     case function(Token, [Token], [Statement])
     case printStatement(Expression)
+    case returnStatement(Token, Expression?)
     case variable(Token, Expression)
     case block([Statement])
     case ifStatement(Expression, Statement, Statement?)
