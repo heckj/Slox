@@ -34,7 +34,7 @@ public enum LOXSource {
         LoxExample(source: chap8_5, tokens: 17, statements: 4),
         LoxExample(source: chap8_6, tokens: 9, statements: 2),
         
-//        LoxExample(source: chap8_7, tokens: 7, statements: 0), // parse error
+        LoxExample(source: chap8_7, tokens: 7, statements: 2),
 
         LoxExample(source: chap8_8, tokens: 16, statements: 3),
         LoxExample(source: chap8_9, tokens: 11, statements: 2, errors: 1),
@@ -46,17 +46,17 @@ public enum LOXSource {
         LoxExample(source: chap8_14, tokens: 62, statements: 7),
         
         LoxExample(source: chap9_1, tokens: 11, statements: 2),
-//        LoxExample(source: chap9_2, tokens: 21, statements: 1), // parse error
-//        LoxExample(source: chap9_3, tokens: 39, statements: 4), // parse error
+        LoxExample(source: chap9_2, tokens: 21, statements: 1),
+        LoxExample(source: chap9_3, tokens: 39, statements: 3),
         
-//        LoxExample(source: chap10_1, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_2, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_3, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_4, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_5, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_6, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_7, tokens: 31, statements: 4),
-//        LoxExample(source: chap10_8, tokens: 31, statements: 4),
+        LoxExample(source: chap10_1, tokens: 37, statements: 3), // runtime error, but not a parsing error
+        LoxExample(source: chap10_2, tokens: 15, statements: 1),
+        LoxExample(source: chap10_3, tokens: 29, statements: 2),
+        LoxExample(source: chap10_4, tokens: 18, statements: 2),
+        LoxExample(source: chap10_5, tokens: 28, statements: 2),
+        LoxExample(source: chap10_6, tokens: 20, statements: 3),
+        LoxExample(source: chap10_7, tokens: 39, statements: 2),
+//        LoxExample(source: chap10_8, tokens: 31, statements: 3),
 //        LoxExample(source: chap10_9, tokens: 31, statements: 4)
     ]
 
@@ -239,10 +239,11 @@ public enum LOXSource {
     add(1,2); // too few
     """
 
+    // error on function with no name
     public static var chap10_2 = """
-    var add = fun(a,b) {
-        print a + b
-    };
+    fun add(a,b) {
+        print a + b;
+    }
     """
 
     public static var chap10_3 = """

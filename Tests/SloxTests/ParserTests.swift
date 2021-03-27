@@ -49,8 +49,6 @@ final class ParserTests: XCTestCase {
     }
 
     func testParsingLogicalComparison() throws {
-    
-        // THE ISSUE IS CASE SENSITIVITY TO KEYWORDS
         let snippetOfPain = """
         if ((foo > 3) and (bar == 5)) {
             print "many";
@@ -58,15 +56,6 @@ final class ParserTests: XCTestCase {
         """
         let tokenlist = Slox.Scanner(snippetOfPain).scanTokens()
         let parser = Parser(tokenlist)
-//        parser.omgVerbose = true
-//        print("Source:")
-//        print("  \(snippetOfPain)")
-//        var indention = 1
-//        for token in tokenlist {
-//            print(String(repeating: " ", count: indention), terminator: "")
-//            print("| \(token) |")
-//            indention+=1
-//        }
         let statements = parser.parse()
         XCTAssertEqual(tokenlist.count, 20, "expected 20 tokens, found \(tokenlist.count) tokens")
         XCTAssertEqual(statements.count, 1, "expected 1 statement, found \(statements.count)")
@@ -81,6 +70,60 @@ final class ParserTests: XCTestCase {
         
     }
     
+    func testParsingForLoop() throws {
+        let tokenlist = Slox.Scanner(LOXSource.chap9_2).scanTokens()
+        let parser = Parser(tokenlist)
+//        // XTRA verboseness
+//        parser.omgVerbose = true
+//        print("Source:")
+//        print("  \(LOXSource.chap9_2)")
+//        var indention = 1
+//        for token in tokenlist {
+//            print(String(repeating: " ", count: indention), terminator: "")
+//            print("| \(token) |")
+//            indention+=1
+//        }
+
+        let statements = parser.parse()
+        XCTAssertEqual(tokenlist.count, 21, "expected 21 tokens, found \(tokenlist.count) tokens")
+        XCTAssertEqual(statements.count, 1, "expected 1 statement, found \(statements.count)")
+        XCTAssertEqual(parser.errors.count, 0)
+        if (parser.errors.count != 0) {
+            parser.printErrors()
+        }
+        print("Retrieved statements:")
+        for stmt in statements {
+            print("  \(stmt)")
+        }
+    }
+
+    func testParsingFunctionWithReturnDeclaration() throws {
+        let tokenlist = Slox.Scanner(LOXSource.chap10_7).scanTokens()
+        let parser = Parser(tokenlist)
+        // XTRA verboseness
+        parser.omgVerbose = true
+        print("Source:")
+        print("  \(LOXSource.chap10_7)")
+        var indention = 1
+        for token in tokenlist {
+            print(String(repeating: " ", count: indention), terminator: "")
+            print("| \(token) |")
+            indention+=1
+        }
+
+        let statements = parser.parse()
+        XCTAssertEqual(tokenlist.count, 39, "expected 15 tokens, found \(tokenlist.count) tokens")
+        XCTAssertEqual(statements.count, 2, "expected 1 statement, found \(statements.count)")
+        XCTAssertEqual(parser.errors.count, 0)
+        if (parser.errors.count != 0) {
+            parser.printErrors()
+        }
+        print("Retrieved statements:")
+        for stmt in statements {
+            print("  \(stmt)")
+        }
+    }
+
     func testParsingExamples() throws {
         for sourceExample in LOXSource.allExamples {
             let tokenlist = Slox.Scanner(sourceExample.source).scanTokens()

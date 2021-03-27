@@ -140,13 +140,16 @@ class Parser {
         let name = try consume(.IDENTIFIER, message: "Expect \(kind) name.")
         try consume(.LEFT_PAREN, message: "Expect '(' after \(kind) name.")
         var parameters: [Token] = []
+        
+        if omgVerbose { indent(); print( "parsing parameters") }
         if !check(.RIGHT_PAREN) {
-            while match(.COMMA) {
+            repeat {
                 if parameters.count >= 255 {
                     throw error(peek(), message: "Can't have more than 255 parameters.")
                 }
+                if omgVerbose { indent(); print( "grabbing a parameter") }
                 parameters.append(try consume(.IDENTIFIER, message: "Expect parameter name"))
-            }
+            } while match(.COMMA)
         }
         try consume(.RIGHT_PAREN, message: "Expect ')' after parameters.")
 
@@ -188,6 +191,8 @@ class Parser {
     private func forStatement() throws -> Statement {
         if omgVerbose { indent(); print( "forStatement()"); omgIndent+=1 }
         try consume(.LEFT_PAREN, message: "Expect '(' after 'for    '.")
+        
+        if omgVerbose { indent(); print( "parsing initializer") }
         let initializer: Statement?
         if match(.SEMICOLON) {
             initializer = nil
@@ -199,17 +204,21 @@ class Parser {
             initializer = try expressionStatement()
         }
 
+        if omgVerbose { indent(); print( "parsing condition") }
         let condition: Expression
-        if check(.SEMICOLON) {
+        if !check(.SEMICOLON) {
             if omgVerbose { indent(); print( "fork -> expression()") }
             condition = try expression()
-        } else {
+        }
+        else {
+            if omgVerbose { indent(); print( "Expression.literal for condition") }
             condition = Expression.literal(.trueToken)
         }
         try consume(.SEMICOLON, message: "Expect ';' after loop condition.")
 
+        if omgVerbose { indent(); print( "parsing increment") }
         let increment: Expression?
-        if check(.RIGHT_PAREN) {
+        if !check(.RIGHT_PAREN) {
             if omgVerbose { indent(); print( "fork -> expression()") }
             increment = try expression()
         } else {
