@@ -65,12 +65,26 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 
 // MARK: Internal Interpretter Data Structures
 
-public final class Environment {
+public final class Environment: CustomStringConvertible {
     var values: [String: RuntimeValue] = [:]
     var enclosing: Environment?
 
     init(enclosing: Environment? = nil) {
         self.enclosing = enclosing
+    }
+
+    public var description: String {
+        var strBuild = "["
+        for (name, value) in values {
+            strBuild += name
+            strBuild += ":"
+            strBuild += String(describing: value)
+        }
+        if let enclosedContent = enclosing {
+            strBuild += enclosedContent.description
+        }
+        strBuild += "]"
+        return strBuild
     }
 
     public func define(_ name: String, value: RuntimeValue) {
@@ -130,6 +144,15 @@ public class Interpretter {
     let globals: Environment
     var environment: Environment
     var tickerTape: [String]?
+    var omgVerbose = false // turns on incredible verbose debugging output
+    var omgIndent = 0
+
+    private func indentPrint(_ something: String) {
+        for _ in 0 ... omgIndent {
+            print(" ", terminator: "")
+        }
+        print(something)
+    }
 
     init(collectOutput: Bool = false) {
         globals = Environment()
@@ -149,9 +172,15 @@ public class Interpretter {
     }
 
     public func interpretStatements(_ statements: [Statement]) throws {
+        if omgVerbose { indentPrint("=== EXECUTING \(statements.count) STATEMENTS ===") }
+        if omgVerbose { indentPrint("=== ENV[\(environment)]") }
+        if omgVerbose { omgIndent += 1 }
         for statement in statements {
+            // if omgVerbose { indentPrint ("<EXEC STMT> \(statement)") }
             try execute(statement)
         }
+        if omgVerbose { omgIndent -= 1 }
+        if omgVerbose { indentPrint("=== END BLOCK ===") }
     }
 
     private func execute(_ statement: Statement) throws {
@@ -176,10 +205,18 @@ public class Interpretter {
     }
 
     private func executeIf(_ condition: Expression, thenStmt: Statement, elseStmt: Statement?) throws {
+        if omgVerbose { indentPrint("executeIf(\(condition),\(thenStmt),\(String(describing: elseStmt))") }
+        if omgVerbose { indentPrint("> IF \(condition)") }
         let value = try evaluate(condition)
+        if omgVerbose { omgIndent += 1 }
+        defer {
+            if omgVerbose { omgIndent -= 1 }
+        }
         if value.truthy {
+            if omgVerbose { indentPrint("> TRUE") }
             try execute(thenStmt)
         } else {
+            if omgVerbose { indentPrint("> FALSE") }
             if let elseStatement = elseStmt {
                 try execute(elseStatement)
             }
@@ -187,7 +224,10 @@ public class Interpretter {
     }
 
     private func executePrint(_ expr: Expression) throws {
+        if omgVerbose { indentPrint("executePrint(\(expr)") }
+        if omgVerbose { indentPrint("> EVALUATE \(expr) TO PRINT") }
         let runtimevalue = try evaluate(expr)
+        if omgVerbose { indentPrint("> PRINT \(runtimevalue)") }
         if tickerTape != nil {
             tickerTape?.append(String(describing: runtimevalue))
         } else {
@@ -196,56 +236,81 @@ public class Interpretter {
     }
 
     private func executeVariable(_ token: Token, _ expr: Expression) throws {
+        if omgVerbose { indentPrint("> DEFINE VAR \(token)") }
         let val = try evaluate(expr)
         environment.define(token.lexeme, value: val)
     }
 
     private func executeBlock(_ statements: [Statement], using: Environment) throws {
+        // if omgVerbose { indentPrint("executeBlock(\(statements), using: \(using)") }
+        // if omgVerbose { indentPrint("> BLOCK w/ \(environment)") }
         let previous = environment
         defer {
+            if omgVerbose { indentPrint("> REVERTING ENV TO \(previous)") }
             self.environment = previous
         }
+        if omgVerbose { indentPrint("> SETTING ENV TO \(using)") }
         environment = using
         try interpretStatements(statements)
+        // if omgVerbose { indentPrint("> BLOCK COMPLETE w/ \(environment)") }
     }
 
     private func executeExpression(_ expr: Expression) throws {
-        _ = try evaluate(expr)
+        // if omgVerbose { indentPrint("executeExpression(\(expr))") }
+        if omgVerbose { indentPrint("> <EVALUATING: \(expr) >"); omgIndent += 1 }
+        defer {
+            if omgVerbose { omgIndent -= 1 }
+        }
+        let result = try evaluate(expr)
+        if omgVerbose { indentPrint("> <RESULT: \(result) >") }
     }
 
     private func executeWhile(_ cond: Expression, _ body: Statement) throws {
-        let val = try evaluate(cond)
-        if val.truthy {
+        if omgVerbose { indentPrint("executeWhile(\(cond),\(body))") }
+        // if omgVerbose { indentPrint("> WHILE LOOP"); omgIndent += 1 }
+        defer {
+            if omgVerbose { omgIndent -= 1 }
+        }
+        while try evaluate(cond).truthy {
             try execute(body)
         }
     }
 
     private func executeFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
-        let localenv = Environment(enclosing: globals)
+        if omgVerbose { indentPrint("executeFunction(\(name),\(params),\(body)") }
+        // if omgVerbose { indentPrint("> FUNCTION CALL \(name) w/ \(params)"); omgIndent += 2 }
+        defer {
+            if omgVerbose { omgIndent -= 2 }
+        }
 
         let function = Callable(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
-
+            let closureEnv = Environment(enclosing: self.globals)
             // pair up the parameter names (variables) and arguments (values) and write them
             // into the environment created for executing this function.
+            // if self.omgVerbose { self.indentPrint("> SETTING UP FUNCTION over \(closureEnv) with args \(arguments)") }
             for (parameter, argument) in zip(params, arguments) {
-                localenv.define(parameter.lexeme, value: argument)
+                // if self.omgVerbose { self.indentPrint("> ENV ADDING: \(parameter.lexeme) : \(argument)") }
+                closureEnv.define(parameter.lexeme, value: argument)
             }
             do {
-                try self.executeBlock(body, using: localenv)
+                // if self.omgVerbose { self.indentPrint("> UPDATED FUNCTION CALL ENV of \(closureEnv)") }
+                try self.executeBlock(body, using: closureEnv)
             } catch let returnError as Return {
                 return returnError.value
             }
-
             return .none
         }
         environment.define(name.lexeme, value: RuntimeValue.callable(function))
     }
 
-    private func executeReturn(_: Token, _ expr: Expression?) throws {
+    private func executeReturn(_ token: Token, _ expr: Expression?) throws {
+        // if omgVerbose { indentPrint("executeReturn(\(token),\(String(describing: expr)))") }
         if let expr = expr {
             let value = try evaluate(expr)
+            if omgVerbose { indentPrint("> RETURN \(value)") }
             throw Return(value: value)
         } else {
+            if omgVerbose { indentPrint("> RETURN \(RuntimeValue.none)") }
             throw Return(value: RuntimeValue.none)
         }
     }
@@ -256,16 +321,12 @@ public class Interpretter {
         switch expr {
         case let .literal(literal):
             return evaluateLiteral(literal)
-
         case let .assign(tok, expr):
             return try evaluateAssign(tok, expr: expr)
-
         case let .unary(unary, expr):
             return try evaluateUnary(unary, expr: expr)
-
         case let .binary(lhs, op, rhs):
             return try evaluateBinary(lhs, op, rhs)
-
         case let .grouping(expr):
             return try evaluateGrouping(expr)
         case let .variable(token):
@@ -279,22 +340,30 @@ public class Interpretter {
         }
     }
 
-    private func evaluateCall(_ callee: Expression, _: Token, _ arguments: [Expression]) throws -> RuntimeValue {
-        let calleeResultValue: RuntimeValue = try evaluate(callee)
+    private func evaluateCall(_ callee: Expression, _ token: Token, _ arguments: [Expression]) throws -> RuntimeValue {
+        if omgVerbose { indentPrint("evaluateCall(\(callee),\(token),\(arguments)") }
+        // if omgVerbose { indentPrint("> <FUNCTION CALL: \(callee) w/ args \(arguments)>"); omgIndent += 1 }
+        defer {
+            if omgVerbose { omgIndent -= 1 }
+        }
 
+        let calleeResultValue: RuntimeValue = try evaluate(callee)
+        if omgVerbose { indentPrint("> DETERMINING ARGUMENT VALUES FOR FUNCTION CALL w/ \(environment)") }
         let argumentValues = try arguments.map { expr -> RuntimeValue in
             try evaluate(expr)
         }
-
+        if omgVerbose { indentPrint("> FUNCTION ARGUMENT VALUES: \(argumentValues)") }
+//        if omgVerbose { indentPrint ("> VERIFY FUNCTION IS CALLABLE") }
         guard case let RuntimeValue.callable(function) = calleeResultValue else {
             throw RuntimeError.notCallable(callee: calleeResultValue)
         }
 
+//        if omgVerbose { indentPrint ("> VERIFY FUNCTION ARITY") }
         guard arguments.count == function.arity else {
             throw RuntimeError.incorrectArgumentCount(expected: function.arity, actual: arguments.count)
         }
 
-//        throw RuntimeError.notImplemented
+        // if omgVerbose { indentPrint("> call w/ \(environment)") }
         return try function.call(self, argumentValues)
     }
 
@@ -570,7 +639,9 @@ public class Interpretter {
 
     private func evaluateAssign(_ tok: Token, expr: Expression) throws -> RuntimeValue {
         do {
-            try environment.assign(tok, evaluate(expr))
+            let valueToAssign = try evaluate(expr)
+            try environment.assign(tok, valueToAssign)
+            if omgVerbose { indentPrint("> <ENV UPDATED TO \(environment) >") }
             return RuntimeValue.none
         } catch {
             throw RuntimeError.undefinedVariable(tok, message: "\(error)")
@@ -604,7 +675,9 @@ public class Interpretter {
 
     private func evaluateVariable(_ token: Token) throws -> RuntimeValue {
         do {
-            return try environment.get(token)
+            let value = try environment.get(token)
+            // if omgVerbose { indentPrint ("> <ENV GET \(token) <- \(value) >") }
+            return value
         } catch {
             throw RuntimeError.undefinedVariable(token, message: "\(error)")
         }

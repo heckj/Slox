@@ -126,6 +126,6 @@ extension Statement: CustomStringConvertible {
 
 extension Callable: CustomStringConvertible {
     public var description: String {
-        return "<fn \(name):\(arity)>"
+        return "<fn:\(arity)>"
     }
 }

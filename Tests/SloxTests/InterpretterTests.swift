@@ -81,14 +81,17 @@ final class IntepretterTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        print("Retrieved statements:")
-        for stmt in statements {
-            print("  \(stmt)")
-        }
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
+        // interpretter.omgIndent = 0
+        // interpretter.omgVerbose = true
         try interpretter.interpretStatements(statements)
+//        print("-----------------------------------------------------")
+//        print(interpretter.environment.values)
+//        print(interpretter.tickerTape as Any)
 
-        // print(interpretter.environment.values)
-        // print(interpretter.tickerTape)
         // base of 'clock'
         // and added the function 'count' from the sample
         let envKeys = interpretter.environment.values.keys
@@ -98,9 +101,10 @@ final class IntepretterTests: XCTestCase {
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 1)
+            XCTAssertEqual(collectedOutput.count, 2)
             // print(collectedOutput)
             XCTAssertEqual(collectedOutput[0], "1.0")
+            XCTAssertEqual(collectedOutput[1], "2.0")
         }
     }
 
@@ -122,14 +126,18 @@ final class IntepretterTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        print("Retrieved statements:")
-        for stmt in statements {
-            print("  \(stmt)")
-        }
-        try interpretter.interpretStatements(statements)
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
 
+        // interpretter.omgIndent = 0
+        // interpretter.omgVerbose = true
+        try interpretter.interpretStatements(statements)
+        print("-----------------------------------------------------")
         print(interpretter.environment.values)
         print(interpretter.tickerTape as Any)
+
         // base of 'clock'
         // and added the function 'count' from the sample
         let envKeys = interpretter.environment.values.keys
@@ -139,9 +147,13 @@ final class IntepretterTests: XCTestCase {
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 1)
-            // print(collectedOutput)
-            XCTAssertEqual(collectedOutput[0], "0.0")
+            XCTAssertEqual(collectedOutput.count, 20)
+            print(collectedOutput)
+            XCTAssertEqual(collectedOutput,
+                           ["0.0", "1.0", "1.0", "2.0", "3.0", "5.0",
+                            "8.0", "13.0", "21.0", "34.0", "55.0",
+                            "89.0", "144.0", "233.0", "377.0", "610.0",
+                            "987.0", "1597.0", "2584.0", "4181.0"])
         }
     }
 }
