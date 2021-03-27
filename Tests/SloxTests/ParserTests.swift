@@ -23,7 +23,7 @@ final class ParserTests: XCTestCase {
         let statements = parser.parse()
 
         XCTAssertEqual(statements.count, 1)
-        XCTAssertEqual(String(describing: statements[0]), "STMT<( - ( + 1.0 ( / ( * 2.0 3.0 ) 4.0 ) ) 5.0 )>")
+        XCTAssertEqual(String(describing: statements[0]), "STMT<( ( 1.0 + ( ( 2.0 * 3.0 ) / 4.0 ) ) - 5.0 )>")
     }
 
     func testLargerParse() {
@@ -44,19 +44,29 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(statements.count, 4)
         XCTAssertEqual(String(describing: statements[0]), "VAR(IDENTIFIER[foo]):(1.0)")
         XCTAssertEqual(String(describing: statements[1]), "PRINT(var(foo))")
-        XCTAssertEqual(String(describing: statements[2]), "IF(( > var(foo) 3.0 )) THEN {{ [PRINT(\"many\")] }} ELSE {nil}")
+        XCTAssertEqual(String(describing: statements[2]), "IF(( var(foo) > 3.0 )) THEN {{ [PRINT(\"many\")] }} ELSE {nil}")
         XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER[pi]):(3.14159)")
     }
 
     func testParsingLogicalComparison() throws {
+    
+        // THE ISSUE IS CASE SENSITIVITY TO KEYWORDS
         let snippetOfPain = """
-        if (foo > 3) AND (bar == 5) {
+        if (foo > 3) and (bar == 5) {
             print "many";
         }
         """
         let tokenlist = Slox.Scanner(snippetOfPain).scanTokens()
         let parser = Parser(tokenlist)
         parser.omgVerbose = true
+        print("Source:")
+        print("  \(snippetOfPain)")
+        var indention = 1
+        for token in tokenlist {
+            print(String(repeating: " ", count: indention), terminator: "")
+            print("| \(token) |")
+            indention+=1
+        }
         let statements = parser.parse()
         XCTAssertEqual(tokenlist.count, 18, "expected 18 tokens, found \(tokenlist.count) tokens")
         XCTAssertEqual(statements.count, 1, "expected 1 statements, found \(statements.count)")

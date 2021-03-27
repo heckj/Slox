@@ -16,6 +16,8 @@ extension Character {
 }
 
 let reservedWords: [String: TokenType] = ["and": TokenType.AND,
+                                          "AND": TokenType.AND,
+                                          "&&": TokenType.AND,
                                           "class": TokenType.CLASS,
                                           "else": TokenType.ELSE,
                                           "false": TokenType.FALSE,
@@ -24,6 +26,8 @@ let reservedWords: [String: TokenType] = ["and": TokenType.AND,
                                           "if": TokenType.IF,
                                           "nil": TokenType.NIL,
                                           "or": TokenType.OR,
+                                          "OR": TokenType.OR,
+                                          "||": TokenType.OR,
                                           "print": TokenType.PRINT,
                                           "return": TokenType.RETURN,
                                           "super": TokenType.SUPER,

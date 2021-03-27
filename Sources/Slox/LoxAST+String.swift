@@ -15,7 +15,7 @@ extension Expression: CustomStringConvertible {
         case let .unary(unaryexp, exp):
             return "( \(unaryexp) \(exp) )"
         case let .binary(lhs, op, rhs):
-            return "( \(op) \(lhs) \(rhs) )"
+            return "( \(lhs) \(op) \(rhs) )"
         case let .grouping(exp):
             return "(group \(exp))"
         case let .variable(tok):
