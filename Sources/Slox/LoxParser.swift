@@ -277,12 +277,12 @@ class Parser {
         if omgVerbose { indent(); print("returnStatement()"); omgIndent += 1 }
 
         let keyword = previous()
-        var expr: Expression? = nil
+        var expr: Expression?
         if omgVerbose { indent(); print("fork -> expression()") }
         if !check(.SEMICOLON) {
             expr = try expression()
         }
-        
+
         try consume(.SEMICOLON, message: "Expect ';' after return value.")
         if omgVerbose { indent(); print("Statement.returnStatement"); omgIndent -= 1 }
         return Statement.returnStatement(keyword, expr)

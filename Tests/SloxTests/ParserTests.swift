@@ -63,10 +63,10 @@ final class ParserTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        print("Retrieved statements:")
-        for stmt in statements {
-            print("  \(stmt)")
-        }
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
     }
 
     func testParsingForLoop() throws {
@@ -90,25 +90,25 @@ final class ParserTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        print("Retrieved statements:")
-        for stmt in statements {
-            print("  \(stmt)")
-        }
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
     }
 
     func testParsingFunctionWithReturnDeclaration() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
-        // XTRA verboseness
-        parser.omgVerbose = true
-        print("Source:")
-        print("  \(LOXSource.chap10_7)")
-        var indention = 1
-        for token in tokenlist {
-            print(String(repeating: " ", count: indention), terminator: "")
-            print("| \(token) |")
-            indention += 1
-        }
+//        // XTRA verboseness
+//        parser.omgVerbose = true
+//        print("Source:")
+//        print("  \(LOXSource.chap10_7)")
+//        var indention = 1
+//        for token in tokenlist {
+//            print(String(repeating: " ", count: indention), terminator: "")
+//            print("| \(token) |")
+//            indention += 1
+//        }
 
         let statements = parser.parse()
         XCTAssertEqual(tokenlist.count, 39, "expected 15 tokens, found \(tokenlist.count) tokens")
@@ -117,10 +117,10 @@ final class ParserTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        print("Retrieved statements:")
-        for stmt in statements {
-            print("  \(stmt)")
-        }
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
     }
 
     func testParsingExamples() throws {

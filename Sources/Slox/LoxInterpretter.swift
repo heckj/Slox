@@ -63,6 +63,8 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     }
 }
 
+// MARK: Internal Interpretter Data Structures
+
 public final class Environment {
     var values: [String: RuntimeValue] = [:]
     var enclosing: Environment?
@@ -112,20 +114,25 @@ public struct Callable {
     let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
 }
 
-// Other versions of this, which I think end up being far more readable
-// and understandable, don't do this within a massive switch, but break up
-// the whole thing into sub-functions (private func...) for each kind of
-// statement. Expressions each get "evaluated" - with a function named akin
-// to the type of expression - e.g. evaluateUnary(unary: Unary) -> RuntimeValue
+private struct Return: Error {
+    let value: RuntimeValue
+}
+
 // Two other versions of this in swift that are worth looking at for comparsions:
 // - https://github1s.com/danielctull/lox
 // - https://github1s.com/hashemi/slox
 
-public class Interpretter {
-    private let globals = Environment()
-    private var environment: Environment
+//    private func pass() {}
 
-    init() {
+// MARK: Interpretter
+
+public class Interpretter {
+    let globals: Environment
+    var environment: Environment
+    var tickerTape: [String]?
+
+    init(collectOutput: Bool = false) {
+        globals = Environment()
         globals.define("clock",
                        value: .callable(
                            Callable(name: "clock",
@@ -136,12 +143,9 @@ public class Interpretter {
                                     })
                        ))
         environment = globals
-    }
-
-    private func pass() {}
-
-    private struct Return: Error {
-        let value: RuntimeValue
+        if collectOutput {
+            tickerTape = []
+        }
     }
 
     public func interpretStatements(_ statements: [Statement]) throws {
@@ -171,15 +175,51 @@ public class Interpretter {
         }
     }
 
-    private func executeReturn(_ keyword: Token, _ expr: Expression?) throws {
-        if let expr = expr {
-            let value = try evaluate(expr)
-            throw Return(value: value)
+    private func executeIf(_ condition: Expression, thenStmt: Statement, elseStmt: Statement?) throws {
+        let value = try evaluate(condition)
+        if value.truthy {
+            try execute(thenStmt)
         } else {
-            throw Return(value: RuntimeValue.none)
+            if let elseStatement = elseStmt {
+                try execute(elseStatement)
+            }
         }
     }
-    
+
+    private func executePrint(_ expr: Expression) throws {
+        let runtimevalue = try evaluate(expr)
+        if tickerTape != nil {
+            tickerTape?.append(String(describing: runtimevalue))
+        } else {
+            print(runtimevalue)
+        }
+    }
+
+    private func executeVariable(_ token: Token, _ expr: Expression) throws {
+        let val = try evaluate(expr)
+        environment.define(token.lexeme, value: val)
+    }
+
+    private func executeBlock(_ statements: [Statement], using: Environment) throws {
+        let previous = environment
+        defer {
+            self.environment = previous
+        }
+        environment = using
+        try interpretStatements(statements)
+    }
+
+    private func executeExpression(_ expr: Expression) throws {
+        _ = try evaluate(expr)
+    }
+
+    private func executeWhile(_ cond: Expression, _ body: Statement) throws {
+        let val = try evaluate(cond)
+        if val.truthy {
+            try execute(body)
+        }
+    }
+
     private func executeFunction(_ name: Token, _ params: [Token], _ body: [Statement]) throws {
         let localenv = Environment(enclosing: globals)
 
@@ -201,45 +241,13 @@ public class Interpretter {
         environment.define(name.lexeme, value: RuntimeValue.callable(function))
     }
 
-    private func executeWhile(_ cond: Expression, _ body: Statement) throws {
-        let val = try evaluate(cond)
-        if val.truthy {
-            try execute(body)
-        }
-    }
-
-    private func executeIf(_ condition: Expression, thenStmt: Statement, elseStmt: Statement?) throws {
-        let value = try evaluate(condition)
-        if value.truthy {
-            try execute(thenStmt)
+    private func executeReturn(_: Token, _ expr: Expression?) throws {
+        if let expr = expr {
+            let value = try evaluate(expr)
+            throw Return(value: value)
         } else {
-            if let elseStatement = elseStmt {
-                try execute(elseStatement)
-            }
+            throw Return(value: RuntimeValue.none)
         }
-    }
-
-    private func executeExpression(_ expr: Expression) throws {
-        _ = try evaluate(expr)
-    }
-
-    private func executePrint(_ expr: Expression) throws {
-        let runtimevalue = try evaluate(expr)
-        print(runtimevalue)
-    }
-
-    private func executeVariable(_ token: Token, _ expr: Expression) throws {
-        let val = try evaluate(expr)
-        environment.define(token.lexeme, value: val)
-    }
-
-    private func executeBlock(_ statements: [Statement], using: Environment) throws {
-        let previous = environment
-        defer {
-            self.environment = previous
-        }
-        environment = using
-        try interpretStatements(statements)
     }
 
     // MARK: Evaluate Expressions...
