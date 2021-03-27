@@ -28,18 +28,18 @@ final class ScannerTests: XCTestCase {
             .EOF,
         ]
         verifyTokens(tokens, types: expected)
-        print("description \(tokens[3].description)")
-        
-        print("lexeme \(tokens[3].lexeme)")
+        // print("description \(tokens[3].description)")
+
+        // print("lexeme \(tokens[3].lexeme)")
         XCTAssertEqual(tokens[3].lexeme, "\"one\"")
-        
-        print("line \(tokens[3].line)")
+
+        // print("line \(tokens[3].line)")
         XCTAssertEqual(tokens[3].line, 1)
-        
-        print("type \(tokens[3].type)")
+
+        // print("type \(tokens[3].type)")
         XCTAssertEqual(tokens[3].type, TokenType.STRING)
-        
-        print("literal \(tokens[3].literal)")
+
+        // print("literal \(tokens[3].literal)")
         XCTAssertEqual(tokens[3].literal, LiteralType.string(value: "\"one\""))
     }
 
@@ -56,8 +56,7 @@ final class ScannerTests: XCTestCase {
         let expected: [TokenType] = [
             .VAR, .IDENTIFIER, .EQUAL, .NUMBER, .SEMICOLON,
             .PRINT, .IDENTIFIER, .SEMICOLON,
-            .IF, .LEFT_PAREN, .IDENTIFIER, .GREATER, .NUMBER, .RIGHT_PAREN,
-            .LEFT_BRACE, .PRINT, .STRING, .RIGHT_BRACE, .SEMICOLON,
+            .IF, .LEFT_PAREN, .IDENTIFIER, .GREATER, .NUMBER, .RIGHT_PAREN, .LEFT_BRACE, .PRINT, .STRING, .RIGHT_BRACE, .SEMICOLON,
             // comment here
             .VAR, .IDENTIFIER, .EQUAL, .NUMBER, .SEMICOLON,
             .EOF,

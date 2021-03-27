@@ -60,7 +60,7 @@ public final class Token: CustomStringConvertible {
         case .none:
             switch type {
             case .IDENTIFIER:
-                return "\(type)[\(self.lexeme)]"
+                return "\(type)[\(lexeme)]"
             case .CLASS, .ELSE, .EOF, .FOR, .FUN, .IF, .VAR, .NIL, .PRINT, .RETURN, .SUPER:
                 return "\(type)"
             default:

@@ -60,18 +60,17 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(tokenlist.count, 20, "expected 20 tokens, found \(tokenlist.count) tokens")
         XCTAssertEqual(statements.count, 1, "expected 1 statement, found \(statements.count)")
         XCTAssertEqual(parser.errors.count, 0)
-        if (parser.errors.count != 0) {
+        if parser.errors.count != 0 {
             parser.printErrors()
         }
         print("Retrieved statements:")
         for stmt in statements {
             print("  \(stmt)")
         }
-        
     }
-    
+
     func testParsingForLoop() throws {
-        let tokenlist = Slox.Scanner(LOXSource.chap9_2).scanTokens()
+        let tokenlist = Slox.Scanner(LOXSource.chap9_2.source).scanTokens()
         let parser = Parser(tokenlist)
 //        // XTRA verboseness
 //        parser.omgVerbose = true
@@ -88,7 +87,7 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(tokenlist.count, 21, "expected 21 tokens, found \(tokenlist.count) tokens")
         XCTAssertEqual(statements.count, 1, "expected 1 statement, found \(statements.count)")
         XCTAssertEqual(parser.errors.count, 0)
-        if (parser.errors.count != 0) {
+        if parser.errors.count != 0 {
             parser.printErrors()
         }
         print("Retrieved statements:")
@@ -98,7 +97,7 @@ final class ParserTests: XCTestCase {
     }
 
     func testParsingFunctionWithReturnDeclaration() throws {
-        let tokenlist = Slox.Scanner(LOXSource.chap10_7).scanTokens()
+        let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness
         parser.omgVerbose = true
@@ -108,14 +107,14 @@ final class ParserTests: XCTestCase {
         for token in tokenlist {
             print(String(repeating: " ", count: indention), terminator: "")
             print("| \(token) |")
-            indention+=1
+            indention += 1
         }
 
         let statements = parser.parse()
         XCTAssertEqual(tokenlist.count, 39, "expected 15 tokens, found \(tokenlist.count) tokens")
         XCTAssertEqual(statements.count, 2, "expected 1 statement, found \(statements.count)")
-        XCTAssertEqual(parser.errors.count, 0)
-        if (parser.errors.count != 0) {
+        XCTAssertEqual(parser.errors.count, 0, "expected 0 errors, found \(parser.errors.count)")
+        if parser.errors.count != 0 {
             parser.printErrors()
         }
         print("Retrieved statements:")
@@ -131,8 +130,8 @@ final class ParserTests: XCTestCase {
             let statements = parser.parse()
             XCTAssertEqual(tokenlist.count, sourceExample.tokens, "source expected \(sourceExample.tokens) tokens, found \(tokenlist.count) tokens")
             XCTAssertEqual(statements.count, sourceExample.statements, "expected \(sourceExample.statements) statements, found \(statements.count) in the source:\n\(sourceExample.source)")
-            XCTAssertEqual(parser.errors.count, sourceExample.errors, "unexpected parse error received:\n\(parser.errors)")
-            if (parser.errors.count != 0) && (sourceExample.errors != parser.errors.count) {
+            XCTAssertEqual(parser.errors.count, sourceExample.errors, "one or more unexpected parse error received:\n\(parser.errors)")
+            if parser.errors.count != 0, sourceExample.errors != parser.errors.count {
                 parser.printErrors()
             }
             if statements.count != sourceExample.statements {
