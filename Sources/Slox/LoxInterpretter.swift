@@ -6,11 +6,11 @@
 //
 
 // Other versions of this in swift that are worth looking at for comparsions:
-//* [alexito4/slox](https://github.com/alexito4/slox)
-//* [eirikvaa/slox](https://github.com/eirikvaa/slox)
-//* [danielctull/slox](https://github.com/danielctull/lox)
-//* [hashemi/bslox](https://github.com/hashemi/bslox) (bytecode)
-//* [hashemi/slox](https://github.com/hashemi/slox)
+// * [alexito4/slox](https://github.com/alexito4/slox)
+// * [eirikvaa/slox](https://github.com/eirikvaa/slox)
+// * [danielctull/slox](https://github.com/danielctull/lox)
+// * [hashemi/bslox](https://github.com/hashemi/bslox) (bytecode)
+// * [hashemi/slox](https://github.com/hashemi/slox)
 
 // Chapter 7: https://craftinginterpreters.com/evaluating-expressions.html
 // Chapter 8: https://craftinginterpreters.com/statements-and-state.html
@@ -304,7 +304,7 @@ public class Interpretter {
         environment.define(name.lexeme, value: RuntimeValue.callable(function))
     }
 
-    private func executeReturn(_ token: Token, _ expr: Expression?) throws {
+    private func executeReturn(_: Token, _ expr: Expression?) throws {
         // if omgVerbose { indentPrint("executeReturn(\(token),\(String(describing: expr)))") }
         if let expr = expr {
             let value = try evaluate(expr)

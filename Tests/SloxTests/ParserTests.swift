@@ -99,7 +99,7 @@ final class ParserTests: XCTestCase {
     func testParsingFunctionWithReturnDeclaration() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
-//        // XTRA verboseness
+        // XTRA verboseness
 //        parser.omgVerbose = true
 //        print("Source:")
 //        print("  \(LOXSource.chap10_7)")
