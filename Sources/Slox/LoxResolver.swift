@@ -7,7 +7,7 @@
 import Foundation
 
 // Chapter 11: Resolving and Binding
-// next: https://craftinginterpreters.com/resolving-and-binding.html#accessing-a-resolved-variable
+// next: https://craftinginterpreters.com/resolving-and-binding.html#invalid-return-errors
 
 public class Resolver {
     private var interpretter: Interpretter
