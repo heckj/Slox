@@ -24,7 +24,7 @@ public class Resolver {
             declare(tok) // declare(stmt.name)
             switch expr {
             case .empty:
-                pass()
+                return
             default:
                 expr.resolve(self)
             }
@@ -36,7 +36,26 @@ public class Resolver {
             }
             resolve(statements)
             endScope()
+        case let .expressionStatement(expr):
+            resolve(expr)
+        case let .ifStatement(condition, thenStatement, elseStatement):
+            resolve(condition)
+            resolve(thenStatement)
+            if let stmt = elseStatement {
+                resolve(stmt)
+            }
+        case let .printStatement(expr):
+            resolve(expr)
+        case let .returnStatement(_, expr):
+            if let returnExpr = expr {
+                resolve(returnExpr)
+            }
+        case let .whileStatement(expr, stmt):
+            resolve(expr)
+            resolve(stmt)
         }
+        
+        
     }
     
     func resolve(_ expr: Expression) {
@@ -49,7 +68,25 @@ public class Resolver {
         case let .assign(tok, expr):
             resolve(expr)
             resolveLocal(expr, tok)
+        case let .binary(lhs, _, rhs):
+            resolve(lhs)
+            resolve(rhs)
+        case let .call(callee, _, args):
+            resolve(callee)
+            for arg in args {
+                resolve(arg)
+            }
+        case let .grouping(expr):
+            resolve(expr)
+        case let .logical(lhs, _, rhs):
+            resolve(lhs)
+            resolve(rhs)
+        case let .unary(_, expr):
+            resolve(expr)
+        case .literal(_), .empty:
+            return
         }
+        
         
     }
     
@@ -94,11 +131,6 @@ public class Resolver {
             
         }
     }
-}
-
-func pass() {
-    // does nothing to allow ignoring a case statement - there's probably a better
-    // way of handling this...
 }
 
 extension Statement {
