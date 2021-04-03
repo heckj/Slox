@@ -28,6 +28,14 @@ public class Resolver {
             default:
                 expr.resolve(self)
             }
+        case let .function(_, params, statements):
+            beginScope()
+            for token in params {
+                declare(token)
+                define(token)
+            }
+            resolve(statements)
+            endScope()
         }
     }
     
