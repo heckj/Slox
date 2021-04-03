@@ -9,7 +9,7 @@ import Foundation
 
 // source material translated from Java in https://craftinginterpreters.com/scanning.html
 
-public enum TokenType {
+public enum TokenType: Equatable, Hashable {
     // single-character tokens
     case LEFT_PAREN, RIGHT_PAREN
     case LEFT_BRACE, RIGHT_BRACE
@@ -37,7 +37,7 @@ public enum TokenType {
     case EOF
 }
 
-public indirect enum LiteralType: Equatable {
+public indirect enum LiteralType: Equatable, Hashable {
     // The rough equivalent of a Union for swift - a literal is one of these kinds of things,
     // but I didn't want to store each option in the Token class directly, nor make the Token class
     // into an enumeration itself.
@@ -46,7 +46,17 @@ public indirect enum LiteralType: Equatable {
     case none
 }
 
-public final class Token: CustomStringConvertible {
+public final class Token: Hashable, Equatable, CustomStringConvertible {
+    public static func == (lhs: Token, rhs: Token) -> Bool {
+        return lhs.type == rhs.type &&
+            lhs.lexeme == rhs.lexeme &&
+            rhs.literal == lhs.literal
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        return hasher.combine(ObjectIdentifier(self))
+    }
+    
     let type: TokenType
     let lexeme: String
     let literal: LiteralType

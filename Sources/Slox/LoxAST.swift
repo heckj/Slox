@@ -73,7 +73,7 @@ public indirect enum Statement {
     case whileStatement(Expression, Statement)
 }
 
-public indirect enum Expression {
+public indirect enum Expression: Hashable {
     case literal(Literal)
     case logical(Expression, LogicalOperator, Expression)
     case unary(Unary, Expression)
@@ -85,7 +85,7 @@ public indirect enum Expression {
     case empty
 }
 
-public indirect enum Unary {
+public indirect enum Unary: Hashable {
     case minus(Token)
     case not(Token)
 
@@ -102,7 +102,7 @@ public indirect enum Unary {
     }
 }
 
-public indirect enum LogicalOperator {
+public indirect enum LogicalOperator: Hashable {
     case And(Token)
     case Or(Token)
 
@@ -119,7 +119,7 @@ public indirect enum LogicalOperator {
     }
 }
 
-public indirect enum Operator {
+public indirect enum Operator: Hashable {
     case Equals(Token)
     case NotEquals(Token)
     case LessThan(Token)
@@ -161,7 +161,7 @@ public indirect enum Operator {
     }
 }
 
-public indirect enum Literal {
+public indirect enum Literal: Hashable {
     case number(Double) // double rather than token?
     case string(String) // string rather than token?
     case trueToken

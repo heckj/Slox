@@ -21,12 +21,15 @@
 import Foundation
 
 public enum RuntimeError: Error {
+    // Interpreter Errors
     case notImplemented
     case typeMismatch(_ token: Token, message: String = "")
     case undefinedVariable(_ token: Token, message: String = "")
     case notCallable(callee: RuntimeValue)
     case incorrectArgumentCount(expected: Int, actual: Int)
     case unexpectedNullValue
+    // Resolver Errors
+    case duplicateVariable(_ token: Token, message: String = "")
 }
 
 /// The form of value that evaluating from a LoxInterpretter returns. The source material choose to
@@ -100,6 +103,14 @@ public final class Environment: CustomStringConvertible {
         values[name] = value
     }
 
+    public func ancestor(_ distance: Int) -> Environment? {
+        var localenv: Environment? = self
+        for _ in 0..<distance {
+            localenv = localenv?.enclosing
+        }
+        return localenv
+    }
+    
     public func get(_ name: Token) throws -> RuntimeValue {
         if let something = values[name.lexeme] {
             return something
@@ -112,6 +123,15 @@ public final class Environment: CustomStringConvertible {
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
 
+    public func getAt(_ distance: Int, _ name: Token) throws -> RuntimeValue {
+        if let env = ancestor(distance) {
+            if let something = env.values[name.lexeme] {
+                return something
+            }
+        }
+        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+    }
+    
     public func assign(_ name: Token, _ val: RuntimeValue) throws {
         guard let _ = values[name.lexeme] else {
             // Wasn't able to find the value within this level of environment,
@@ -126,6 +146,10 @@ public final class Environment: CustomStringConvertible {
             }
         }
         values[name.lexeme] = val
+    }
+    
+    public func assignAt(_ distance: Int, _ name: Token, _ val: RuntimeValue) throws {
+        ancestor(distance)?.values[name.lexeme] = val
     }
 }
 
@@ -144,6 +168,7 @@ private struct Return: Error {
 public class Interpretter {
     let globals: Environment
     var environment: Environment
+    var locals: [Expression: Int] = [:] // side table looking up expressions with distance
     var tickerTape: [String]?
     var omgVerbose = false // turns on incredible verbose debugging output
     var omgIndent = 0
@@ -191,7 +216,7 @@ public class Interpretter {
         case let .printStatement(expr):
             try executePrint(expr)
         case let .variable(token, expr):
-            try executeVariable(token, expr)
+            try executeVariableAssignment(token, expr)
         case let .block(statements):
             try executeBlock(statements, using: Environment(enclosing: environment))
         case let .expressionStatement(expr):
@@ -236,10 +261,14 @@ public class Interpretter {
         }
     }
 
-    private func executeVariable(_ token: Token, _ expr: Expression) throws {
+    private func executeVariableAssignment(_ token: Token, _ expr: Expression) throws {
         if omgVerbose { indentPrint("> DEFINE VAR \(token)") }
+        
         let val = try evaluate(expr)
-        environment.define(token.lexeme, value: val)
+        if let distance = locals[expr] {
+            try environment.assignAt(distance, token, val)
+        }
+        // environment.define(token.lexeme, value: val)
     }
 
     private func executeBlock(_ statements: [Statement], using: Environment) throws {
@@ -316,6 +345,10 @@ public class Interpretter {
         }
     }
 
+    func resolve(_ expr: Expression, _ depth: Int) {
+        locals[expr] = depth
+    }
+    
     // MARK: Evaluate Expressions...
 
     public func evaluate(_ expr: Expression) throws -> RuntimeValue {
@@ -331,7 +364,7 @@ public class Interpretter {
         case let .grouping(expr):
             return try evaluateGrouping(expr)
         case let .variable(token):
-            return try evaluateVariable(token)
+            return try evaluateVariable(expr, token)
         case .empty:
             return RuntimeValue.none
         case let .logical(lhs, op, rhs):
@@ -674,16 +707,22 @@ public class Interpretter {
         return try evaluate(expr)
     }
 
-    private func evaluateVariable(_ token: Token) throws -> RuntimeValue {
+    private func evaluateVariable(_ expr: Expression, _ token: Token) throws -> RuntimeValue {
         do {
-            let value = try environment.get(token)
             // if omgVerbose { indentPrint ("> <ENV GET \(token) <- \(value) >") }
-            return value
+            return try lookupVariable(expr, token)
         } catch {
             throw RuntimeError.undefinedVariable(token, message: "\(error)")
         }
     }
 
+    private func lookupVariable(_ expr: Expression, _ name: Token) throws -> RuntimeValue {
+        if let distance = locals[expr] {
+            return try environment.getAt(distance, name)
+        }
+        return try globals.get(name)
+    }
+    
     private func evaluateLiteral(_ literal: Literal) -> RuntimeValue {
         switch literal {
         case let .number(doubleValue):
