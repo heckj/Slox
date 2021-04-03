@@ -11,12 +11,12 @@ import Foundation
 
 public class Resolver {
     private var interpretter: Interpretter
-    private var scopes: [[String:Bool]] = []
-    
+    private var scopes: [[String: Bool]] = []
+
     init(interpretter: Interpretter) {
         self.interpretter = interpretter
     }
-    
+
     func resolve(_ stmt: Statement) throws {
         switch stmt {
         case let .block(stmts):
@@ -57,14 +57,12 @@ public class Resolver {
             try resolve(expr)
             try resolve(stmt)
         }
-        
-        
     }
-    
+
     func resolve(_ expr: Expression) throws {
         switch expr {
         case let .variable(tok):
-            if !scopes.isEmpty && scopes.last?[tok.lexeme] == false {
+            if !scopes.isEmpty, scopes.last?[tok.lexeme] == false {
                 throw RuntimeError.duplicateVariable(tok, message: "Can't read local variable in its own initializer.")
             }
             resolveLocal(expr, tok)
@@ -89,27 +87,25 @@ public class Resolver {
         case .literal(_), .empty:
             return
         }
-        
-        
     }
-    
+
     func resolveLocal(_ expr: Expression, _ name: Token) {
-        //scopes.enumerated() // (index, element)
+        // scopes.enumerated() // (index, element)
         for (idx, _) in scopes.enumerated().reversed() {
             if scopes[idx].keys.contains(name.lexeme) {
                 interpretter.resolve(expr, idx)
             }
         }
     }
-    
+
     func beginScope() {
         scopes.append([:])
     }
-    
+
     func endScope() {
         _ = scopes.popLast()
     }
-    
+
     private func declare(_ tok: Token) throws {
         if scopes.isEmpty { return }
         if var scope = scopes.last {
@@ -119,29 +115,25 @@ public class Resolver {
             scope[tok.lexeme] = false
         }
     }
-    
+
     private func define(_ tok: Token) {
         if scopes.isEmpty { return }
         if var scope = scopes.last {
             scope[tok.lexeme] = true
         }
     }
-    
+
     func resolve(_ statements: [Statement]) {
         for statement in statements {
             statement.resolve(self)
-            
         }
     }
 }
 
 extension Statement {
-    func resolve(_ resolver: Resolver) {
-        
-    }
+    func resolve(_: Resolver) {}
 }
+
 extension Expression {
-    func resolve(_ resolver: Resolver) {
-        
-    }
+    func resolve(_: Resolver) {}
 }

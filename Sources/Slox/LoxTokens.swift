@@ -52,11 +52,11 @@ public final class Token: Hashable, Equatable, CustomStringConvertible {
             lhs.lexeme == rhs.lexeme &&
             rhs.literal == lhs.literal
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         return hasher.combine(ObjectIdentifier(self))
     }
-    
+
     let type: TokenType
     let lexeme: String
     let literal: LiteralType

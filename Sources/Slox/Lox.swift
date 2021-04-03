@@ -53,7 +53,7 @@ public enum Lox {
             return
         }
         let resolver = Resolver(interpretter: interpretter)
-        
+
         do {
             resolver.resolve(statements)
             try interpretter.interpretStatements(statements)

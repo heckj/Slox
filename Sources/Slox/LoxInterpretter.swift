@@ -105,12 +105,12 @@ public final class Environment: CustomStringConvertible {
 
     public func ancestor(_ distance: Int) -> Environment? {
         var localenv: Environment? = self
-        for _ in 0..<distance {
+        for _ in 0 ..< distance {
             localenv = localenv?.enclosing
         }
         return localenv
     }
-    
+
     public func get(_ name: Token) throws -> RuntimeValue {
         if let something = values[name.lexeme] {
             return something
@@ -131,7 +131,7 @@ public final class Environment: CustomStringConvertible {
         }
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
-    
+
     public func assign(_ name: Token, _ val: RuntimeValue) throws {
         guard let _ = values[name.lexeme] else {
             // Wasn't able to find the value within this level of environment,
@@ -147,7 +147,7 @@ public final class Environment: CustomStringConvertible {
         }
         values[name.lexeme] = val
     }
-    
+
     public func assignAt(_ distance: Int, _ name: Token, _ val: RuntimeValue) throws {
         ancestor(distance)?.values[name.lexeme] = val
     }
@@ -263,7 +263,7 @@ public class Interpretter {
 
     private func executeVariableAssignment(_ token: Token, _ expr: Expression) throws {
         if omgVerbose { indentPrint("> DEFINE VAR \(token)") }
-        
+
         let val = try evaluate(expr)
         if let distance = locals[expr] {
             try environment.assignAt(distance, token, val)
@@ -348,7 +348,7 @@ public class Interpretter {
     func resolve(_ expr: Expression, _ depth: Int) {
         locals[expr] = depth
     }
-    
+
     // MARK: Evaluate Expressions...
 
     public func evaluate(_ expr: Expression) throws -> RuntimeValue {
@@ -722,7 +722,7 @@ public class Interpretter {
         }
         return try globals.get(name)
     }
-    
+
     private func evaluateLiteral(_ literal: Literal) -> RuntimeValue {
         switch literal {
         case let .number(doubleValue):
