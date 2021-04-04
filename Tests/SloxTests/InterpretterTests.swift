@@ -10,16 +10,16 @@ final class IntepretterTests: XCTestCase {
     }
 
     func testInterpretterInspection() throws {
-        XCTAssertNil(interpretter.globals.enclosing)
+        XCTAssertEqual(interpretter.globals.stack.count,1)
         // initial setup should only have the external 'clock' function defined
-        XCTAssertEqual(interpretter.globals.values.count, 1)
-        XCTAssertNotNil(interpretter.globals.values["clock"])
-
-        XCTAssertEqual(interpretter.environment.values.count, 1)
-        XCTAssertNotNil(interpretter.environment.values["clock"])
-        // print(interpretter.globals.values)
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 1)
+        XCTAssertNotNil(interpretter.globals.testGet("clock"))
+        XCTAssertEqual(interpretter.globals.testCount(), 1)
+        
+        XCTAssertEqual(interpretter.environment.stack.count,1)
+        // initial setup should only have the external 'clock' function defined
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertEqual(interpretter.environment.testCount(), 1)
+        
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         XCTAssertEqual(interpretter.tickerTape?.count, 0)
@@ -46,14 +46,15 @@ final class IntepretterTests: XCTestCase {
             }
         }
 
-        // print(interpretter.environment.values)
+        // print(interpretter.environment.stack)
         // print(interpretter.tickerTape)
         // base of 'clock'
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        // and added the function 'add' from the sample
-        XCTAssertNotNil(interpretter.environment.values["add"])
-
+        XCTAssertEqual(interpretter.environment.stack.count,1)
+        // initial setup should only have the external 'clock' function defined
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertNotNil(interpretter.environment.testGet("add"))
+        XCTAssertEqual(interpretter.environment.testCount(), 2)
+        
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
@@ -95,10 +96,11 @@ final class IntepretterTests: XCTestCase {
 
         // base of 'clock'
         // and added the function 'count' from the sample
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["count"])
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertNotNil(interpretter.environment.testGet("count"))
+        XCTAssertEqual(interpretter.environment.testCount(), 2)
 
+        
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
@@ -142,9 +144,9 @@ final class IntepretterTests: XCTestCase {
 
         // base of 'clock'
         // and added the function 'count' from the sample
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["fib"])
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertNotNil(interpretter.environment.testGet("fib"))
+        XCTAssertEqual(interpretter.environment.testCount(), 2)
 
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)

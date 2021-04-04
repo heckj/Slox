@@ -33,14 +33,16 @@ final class ResolverTests: XCTestCase {
      */
     
     func testResolverInspection() throws {
-        XCTAssertNil(interpretter.globals.enclosing)
+        XCTAssertEqual(interpretter.globals.stack.count,1)
         // initial setup should only have the external 'clock' function defined
-        XCTAssertEqual(interpretter.globals.values.count, 1)
-        XCTAssertNotNil(interpretter.globals.values["clock"])
-
-        // print(interpretter.globals.values)
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 1)
+        XCTAssertNotNil(interpretter.globals.testGet("clock"))
+        XCTAssertEqual(interpretter.globals.testCount(), 1)
+        
+        XCTAssertEqual(interpretter.environment.stack.count,1)
+        // initial setup should only have the external 'clock' function defined
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertEqual(interpretter.environment.testCount(), 1)
+        
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         XCTAssertEqual(interpretter.tickerTape?.count, 0)
@@ -192,9 +194,11 @@ final class ResolverTests: XCTestCase {
 
         // base of 'clock'
         // and added the function 'count' from the sample
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["fib"])
+        XCTAssertEqual(interpretter.environment.stack.count,2)
+        // initial setup should only have the external 'clock' function defined
+        XCTAssertNotNil(interpretter.environment.testGet("clock"))
+        XCTAssertNotNil(interpretter.environment.testGet("fib"))
+        XCTAssertEqual(interpretter.environment.testCount(), 2)
 
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)

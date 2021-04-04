@@ -77,80 +77,101 @@ public indirect enum RuntimeValue: CustomStringConvertible {
 // MARK: Internal Interpretter Data Structures
 
 public final class Environment: CustomStringConvertible {
-    var values: [String: RuntimeValue] = [:]
-    var enclosing: Environment?
+    var stack: [Scope]
 
+    // internal wrapper class around the dictionary in
+    // order to get reference semantics, which ends up being
+    // important for the resolver.
+    final class Scope: CustomStringConvertible {
+        private var values: [String:RuntimeValue] = [:]
+        subscript(index: String) -> RuntimeValue? {
+            get {
+                return values[index]
+            }
+            set(newValue) {
+                values[index] = newValue
+            }
+        }
+        var description: String {
+            var strBuild = "["
+            for (name, value) in values {
+                strBuild += name
+                strBuild += ":"
+                strBuild += String(describing: value)
+            }
+            strBuild += "]"
+            return strBuild
+        }
+        var count: Int {
+            return values.count
+        }
+    }
+    
     init(enclosing: Environment? = nil) {
-        self.enclosing = enclosing
+        if let enclosing = enclosing {
+            var newStack = enclosing.stack
+            newStack.append(Scope())
+            self.stack = newStack
+            // why not self.stack = enclosing.stack.append(Scope())?
+        } else {
+            self.stack = [Scope()]
+        }
     }
 
     public var description: String {
-        var strBuild = "["
-        for (name, value) in values {
-            strBuild += name
-            strBuild += ":"
-            strBuild += String(describing: value)
-        }
-        if let enclosedContent = enclosing {
-            strBuild += enclosedContent.description
-        }
-        strBuild += "]"
-        return strBuild
+        return stack.map { $0.description }.joined()
     }
 
     public func define(_ name: String, value: RuntimeValue) {
         // by not checking to see if the name already exists,
         // we support "overwriting it" in the program flow for Lox
-        values[name] = value
+        stack[stack.count - 1][name] = value
     }
 
-    public func ancestor(_ distance: Int) -> Environment? {
-        var localenv: Environment? = self
-        for _ in 0 ..< distance {
-            localenv = localenv?.enclosing
-        }
-        return localenv
-    }
-
-    public func get(_ name: Token) throws -> RuntimeValue {
-        if let something = values[name.lexeme] {
-            return something
-        }
+    public func testGet(_ name: String) -> RuntimeValue? {
         // Look/recurse through any sets of enclosing environments to see
         // if the variable is defined there.
-        if let something = try enclosing?.get(name) {
-            return something
+        for (_,scope) in stack.reversed().enumerated() {
+            if let foundValue = scope[name] {
+                return foundValue
+            }
         }
-        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+        return nil
+    }
+    
+    public func testCount() -> Int {
+        return stack.map { $0.count }.reduce(0) { $0 + $1 }
     }
 
     public func getAt(_ distance: Int, _ name: Token) throws -> RuntimeValue {
-        if let env = ancestor(distance) {
-            if let something = env.values[name.lexeme] {
-                return something
-            }
+        if let foundValue = stack[stack.count - 1 - distance][name.lexeme] {
+            return foundValue
         }
+        // might need to move this throw into the code accessing it
+        // if we want to pass back an optional RuntimeValue...
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
 
-    public func assign(_ name: Token, _ val: RuntimeValue) throws {
-        guard let _ = values[name.lexeme] else {
-            // Wasn't able to find the value within this level of environment,
-            // so before pitching an error, we'll try any enclosing environments.
-            if enclosing != nil {
-                try enclosing?.assign(name, val)
-                return
-            } else {
-                // No enclosing environment, so we can't assign the variable - it was
-                // never defined, so we bail out here.
-                throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
-            }
-        }
-        values[name.lexeme] = val
-    }
+//    public func assign(_ name: String, _ val: RuntimeValue) throws {
+//        // Look/recurse through any sets of enclosing environments to see
+//        // if the variable is defined there, starting with the last
+//        // scope and working forward in the stack.
+//        for (_,scope) in stack.reversed().enumerated() {
+//            if let _ = scope[name] {
+//                scope[name] = val
+//                return
+//            }
+//        }
+//        // No enclosing environment, so we can't assign the variable - it was
+//        // never defined, so we bail out here.
+//        throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name)'")
+//    }
 
     public func assignAt(_ distance: Int, _ name: Token, _ val: RuntimeValue) throws {
-        ancestor(distance)?.values[name.lexeme] = val
+        guard stack[stack.count - 1 - distance][name.lexeme] != nil else {
+            throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
+        }
+        stack[stack.count - 1 - distance][name.lexeme] = val
     }
 }
 
@@ -678,7 +699,7 @@ public class Interpretter {
     private func evaluateAssign(_ tok: Token, expr: Expression) throws -> RuntimeValue {
         do {
             let valueToAssign = try evaluate(expr)
-            try environment.assign(tok, valueToAssign)
+            try environment.assignAt(0, tok, valueToAssign)
             if omgVerbose { indentPrint("> <ENV UPDATED TO \(environment) >") }
             return RuntimeValue.none
         } catch {
@@ -724,7 +745,7 @@ public class Interpretter {
         if let distance = locals[expr] {
             return try environment.getAt(distance, name)
         }
-        return try globals.get(name)
+        return try globals.getAt(0, name)
     }
 
     private func evaluateLiteral(_ literal: Literal) -> RuntimeValue {
