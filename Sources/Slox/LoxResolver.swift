@@ -10,18 +10,30 @@ import Foundation
 // next: https://craftinginterpreters.com/resolving-and-binding.html#invalid-return-errors
 
 public class Resolver {
-    private var interpretter: Interpretter
-    private var scopes: [[String: Bool]] = []
+    var interpretter: Interpretter
+    var scopes: [[String: Bool]] = []
+    var omgVerbose = false
+    var omgIndent = 0
 
-    init(interpretter: Interpretter) {
+    init(_ interpretter: Interpretter) {
         self.interpretter = interpretter
     }
 
+    private func indentPrint(_ something: String) {
+        if (omgIndent > 0) {
+            for _ in 0 ... omgIndent {
+                print(" ", terminator: "")
+            }
+        }
+        print(something)
+    }
+
     func resolve(_ stmt: Statement) throws {
+        if omgVerbose { indentPrint("resolving statement: \(stmt)") }
         switch stmt {
         case let .block(stmts):
             beginScope()
-            resolve(stmts)
+            try resolve(stmts)
             endScope()
         case let .variable(tok, expr):
             try declare(tok) // declare(stmt.name)
@@ -29,7 +41,7 @@ public class Resolver {
             case .empty:
                 return
             default:
-                expr.resolve(self)
+                try resolve(expr)
             }
         case let .function(_, params, statements):
             beginScope()
@@ -37,7 +49,7 @@ public class Resolver {
                 try declare(token)
                 define(token)
             }
-            resolve(statements)
+            try resolve(statements)
             endScope()
         case let .expressionStatement(expr):
             try resolve(expr)
@@ -60,10 +72,11 @@ public class Resolver {
     }
 
     func resolve(_ expr: Expression) throws {
+        if omgVerbose { indentPrint("resolving expression: \(expr)") }
         switch expr {
         case let .variable(tok):
             if !scopes.isEmpty, scopes.last?[tok.lexeme] == false {
-                throw RuntimeError.duplicateVariable(tok, message: "Can't read local variable in its own initializer.")
+                throw RuntimeError.readingVarInInitialization(tok, message: "Can't read local variable in its own initializer.")
             }
             resolveLocal(expr, tok)
         case let .assign(tok, expr):
@@ -91,49 +104,52 @@ public class Resolver {
 
     func resolveLocal(_ expr: Expression, _ name: Token) {
         // scopes.enumerated() // (index, element)
-        for (idx, _) in scopes.enumerated().reversed() {
-            if scopes[idx].keys.contains(name.lexeme) {
+        if omgVerbose { indentPrint("resolveLocal \(expr) \(name)") }
+        for (idx, scope) in scopes.reversed().enumerated() {
+            if scope.keys.contains(name.lexeme) {
                 interpretter.resolve(expr, idx)
             }
         }
     }
 
     func beginScope() {
+        omgIndent += 1
         scopes.append([:])
     }
 
     func endScope() {
         _ = scopes.popLast()
+        omgIndent -= 1
     }
 
     private func declare(_ tok: Token) throws {
-        if scopes.isEmpty { return }
-        if var scope = scopes.last {
-            if scope.keys.contains(tok.lexeme) {
-                throw RuntimeError.duplicateVariable(tok, message: "Variable with this name already declared in this scope")
-            }
-            scope[tok.lexeme] = false
+        
+        if scopes.isEmpty {
+            if omgVerbose { indentPrint("declare(EMPTY) \(tok)") }
+            return
         }
+        if omgVerbose { indentPrint("declare(scope) \(tok)") }
+
+        if scopes[scopes.count-1].keys.contains(tok.lexeme) {
+            throw RuntimeError.duplicateVariable(tok, message: "Variable with this name already declared in this scope")
+        }
+        
+        scopes[scopes.count-1][tok.lexeme] = false
     }
 
     private func define(_ tok: Token) {
-        if scopes.isEmpty { return }
-        if var scope = scopes.last {
-            scope[tok.lexeme] = true
+        if scopes.isEmpty {
+            if omgVerbose { indentPrint("define(EMPTY) \(tok)") }
+            return
         }
+        if omgVerbose { indentPrint("define(scope) \(tok)") }
+        
+        scopes[scopes.count-1][tok.lexeme] = true
     }
 
-    func resolve(_ statements: [Statement]) {
+    func resolve(_ statements: [Statement]) throws {
         for statement in statements {
-            statement.resolve(self)
+            try resolve(statement)
         }
     }
-}
-
-extension Statement {
-    func resolve(_: Resolver) {}
-}
-
-extension Expression {
-    func resolve(_: Resolver) {}
 }

@@ -52,10 +52,10 @@ public enum Lox {
         if hadError {
             return
         }
-        let resolver = Resolver(interpretter: interpretter)
+        let resolver = Resolver(interpretter)
 
         do {
-            resolver.resolve(statements)
+            try resolver.resolve(statements)
             try interpretter.interpretStatements(statements)
         } catch {
             print("INTERPRETTER HALTING: \(error)")
@@ -81,6 +81,8 @@ public enum Lox {
         case let .incorrectArgumentCount(expected: expected, actual: actual):
             print("RuntimeError: Incorrect number of arguments in function call. Expected \(expected), received \(actual)")
         case let .duplicateVariable(token, message: message):
+            print("ResolverError: \(token): \(message)")
+        case let .readingVarInInitialization(token, message: message):
             print("ResolverError: \(token): \(message)")
         }
         hadRuntimeError = true

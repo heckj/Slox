@@ -80,12 +80,14 @@ final class IntepretterTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
+        let resolver = Resolver(interpretter)
+        interpretter.omgIndent = 0
+        interpretter.omgVerbose = true
+        try resolver.resolve(statements)
         // print("Retrieved statements:")
         // for stmt in statements {
         //     print("  \(stmt)")
         // }
-        // interpretter.omgIndent = 0
-        // interpretter.omgVerbose = true
         try interpretter.interpretStatements(statements)
 //        print("-----------------------------------------------------")
 //        print(interpretter.environment.values)
@@ -129,7 +131,8 @@ final class IntepretterTests: XCTestCase {
         // for stmt in statements {
         //     print("  \(stmt)")
         // }
-
+        let resolver = Resolver(interpretter)
+        try resolver.resolve(statements)
         // interpretter.omgIndent = 0
         // interpretter.omgVerbose = true
         try interpretter.interpretStatements(statements)

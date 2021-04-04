@@ -29,6 +29,7 @@ public enum RuntimeError: Error {
     case incorrectArgumentCount(expected: Int, actual: Int)
     case unexpectedNullValue
     // Resolver Errors
+    case readingVarInInitialization(_ token: Token, message: String = "")
     case duplicateVariable(_ token: Token, message: String = "")
 }
 
@@ -174,8 +175,10 @@ public class Interpretter {
     var omgIndent = 0
 
     private func indentPrint(_ something: String) {
-        for _ in 0 ... omgIndent {
-            print(" ", terminator: "")
+        if (omgIndent > 0) {
+            for _ in 0 ... omgIndent {
+                print(" ", terminator: "")
+            }
         }
         print(something)
     }
@@ -346,6 +349,7 @@ public class Interpretter {
     }
 
     func resolve(_ expr: Expression, _ depth: Int) {
+        if omgVerbose { indentPrint("> resolving \(expr) against \(locals)") }
         locals[expr] = depth
     }
 
