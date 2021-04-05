@@ -10,7 +10,7 @@ import Foundation
 import XCTest
 
 final class ResolverTests: XCTestCase {
-    var interpretter: Interpretter = Interpretter()
+    var interpretter = Interpretter()
     var resolver: Resolver?
 
     override func setUp() {
@@ -31,7 +31,7 @@ final class ResolverTests: XCTestCase {
         and verify it was created correctly.
      try interpretter.interpretStatements(statements)
      */
-    
+
     func testResolverInspection() throws {
         XCTAssertNil(interpretter.globals.enclosing)
         // initial setup should only have the external 'clock' function defined
@@ -44,7 +44,7 @@ final class ResolverTests: XCTestCase {
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         XCTAssertEqual(interpretter.tickerTape?.count, 0)
-        
+
         resolver = Resolver(interpretter)
         // make sure we've got one first...
         guard let resolver = resolver else {
@@ -92,7 +92,7 @@ final class ResolverTests: XCTestCase {
         }
         let resolver = Resolver(interpretter)
         // resolver.omgVerbose = true
-        
+
         XCTAssertThrowsError(try resolver.resolve(statements), "Expected RuntimeError.readingVarInInitialization") { err in
             if let rte = err as? RuntimeError {
                 switch rte {
@@ -105,7 +105,6 @@ final class ResolverTests: XCTestCase {
                 XCTFail("Expected RuntimeError error")
             }
         }
-
     }
 
     func testResolvingCounterWithExplicitReturn() throws {
@@ -133,7 +132,7 @@ final class ResolverTests: XCTestCase {
         let resolver = Resolver(interpretter)
         // resolver.omgVerbose = true
         try resolver.resolve(statements)
-        
+
         print(resolver.scopes)
         // interpretter.omgIndent = 0
         // interpretter.omgVerbose = true
@@ -210,4 +209,3 @@ final class ResolverTests: XCTestCase {
         }
     }
 }
-

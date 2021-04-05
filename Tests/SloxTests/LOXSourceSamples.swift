@@ -345,23 +345,23 @@ public enum LOXSource {
 
     public static var chap11_1a = LoxExample(
         source: """
-        var a = "outer";
-        {
-          var a = a;
-        }
-       """,
+         var a = "outer";
+         {
+           var a = a;
+         }
+        """,
         tokens: 13, statements: 2
     ) // Resolver Error - shadowing outer scope
 
     public static var chap11_1b = LoxExample(
         source: """
-        {
-            var a = "outer";
-            {
-              var a = a;
-            }
-        }
-       """,
+         {
+             var a = "outer";
+             {
+               var a = a;
+             }
+         }
+        """,
         // with the outer 'block', this adds 2 tokens, and collapses to a single statement
         tokens: 15, statements: 1
     ) // Resolver Error - shadowing outer scope

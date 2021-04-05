@@ -20,7 +20,7 @@ public class Resolver {
     }
 
     private func indentPrint(_ something: String) {
-        if (omgIndent > 0) {
+        if omgIndent > 0 {
             for _ in 0 ... omgIndent {
                 print(" ", terminator: "")
             }
@@ -123,18 +123,17 @@ public class Resolver {
     }
 
     private func declare(_ tok: Token) throws {
-        
         if scopes.isEmpty {
             if omgVerbose { indentPrint("declare(EMPTY) \(tok)") }
             return
         }
         if omgVerbose { indentPrint("declare(scope) \(tok)") }
 
-        if scopes[scopes.count-1].keys.contains(tok.lexeme) {
+        if scopes[scopes.count - 1].keys.contains(tok.lexeme) {
             throw RuntimeError.duplicateVariable(tok, message: "Variable with this name already declared in this scope")
         }
-        
-        scopes[scopes.count-1][tok.lexeme] = false
+
+        scopes[scopes.count - 1][tok.lexeme] = false
     }
 
     private func define(_ tok: Token) {
@@ -143,8 +142,8 @@ public class Resolver {
             return
         }
         if omgVerbose { indentPrint("define(scope) \(tok)") }
-        
-        scopes[scopes.count-1][tok.lexeme] = true
+
+        scopes[scopes.count - 1][tok.lexeme] = true
     }
 
     func resolve(_ statements: [Statement]) throws {

@@ -175,7 +175,7 @@ public class Interpretter {
     var omgIndent = 0
 
     private func indentPrint(_ something: String) {
-        if (omgIndent > 0) {
+        if omgIndent > 0 {
             for _ in 0 ... omgIndent {
                 print(" ", terminator: "")
             }
