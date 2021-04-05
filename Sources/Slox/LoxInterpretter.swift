@@ -359,7 +359,7 @@ public class Interpretter {
         switch expr {
         case let .literal(literal):
             return evaluateLiteral(literal)
-        case let .assign(tok, expr):
+        case let .assign(tok, expr, _):
             return try evaluateAssign(tok, expr: expr)
         case let .unary(unary, expr):
             return try evaluateUnary(unary, expr: expr)
@@ -367,7 +367,7 @@ public class Interpretter {
             return try evaluateBinary(lhs, op, rhs)
         case let .grouping(expr):
             return try evaluateGrouping(expr)
-        case let .variable(token):
+        case let .variable(token, _):
             return try evaluateVariable(expr, token)
         case .empty:
             return RuntimeValue.none

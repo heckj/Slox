@@ -163,8 +163,9 @@ final class ResolverTests: XCTestCase {
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
         // parser.omgVerbose = true
-        // print("Source:")
-        // print("  \(LOXSource.chap10_7)")
+        print("Source: =====================")
+        print("\(LOXSource.chap10_8.source)")
+        print("=============================")
         // var indention = 1
         // for token in tokenlist {
         //     print(String(repeating: " ", count: indention), terminator: "")

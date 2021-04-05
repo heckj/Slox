@@ -343,9 +343,9 @@ class Parser {
             let value = try assignment()
 
             switch expr {
-            case let .variable(token):
+            case let .variable(token, _):
                 if omgVerbose { indent(); print("Expression.assign"); omgIndent -= 1 }
-                return Expression.assign(token, value)
+                return Expression.assign(token, value, UUID())
             default:
                 // We report an error if the left-hand side isn’t a valid assignment
                 // target, but we don’t throw it because the parser isn’t in a
@@ -545,7 +545,7 @@ class Parser {
             }
         case .IDENTIFIER:
             if omgVerbose { indent(); print("Expression.variable"); omgIndent -= 1 }
-            return Expression.variable(current)
+            return Expression.variable(current, UUID())
         case .LEFT_PAREN:
             if omgVerbose { indent(); print("fork -> expression()") }
             let expr = try expression()

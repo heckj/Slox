@@ -74,12 +74,12 @@ public class Resolver {
     func resolve(_ expr: Expression) throws {
         if omgVerbose { indentPrint("resolving expression: \(expr)") }
         switch expr {
-        case let .variable(tok):
+        case let .variable(tok, _):
             if !scopes.isEmpty, scopes.last?[tok.lexeme] == false {
                 throw RuntimeError.readingVarInInitialization(tok, message: "Can't read local variable in its own initializer.")
             }
             resolveLocal(expr, tok)
-        case let .assign(tok, expr):
+        case let .assign(tok, expr, _):
             try resolve(expr)
             resolveLocal(expr, tok)
         case let .binary(lhs, _, rhs):

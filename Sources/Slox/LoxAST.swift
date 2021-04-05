@@ -80,10 +80,24 @@ public indirect enum Expression: Hashable {
     case binary(Expression, Operator, Expression)
     case call(Expression, Token, [Expression])
     case grouping(Expression)
-    case variable(Token)
-    case assign(Token, Expression)
+    case variable(Token, UUID)
+    case assign(Token, Expression, UUID)
     case empty
 }
+
+// NOTE(heckj): the whole slipping in a UUID for the variable and assign
+// expressions is a hack. Following Chapter 11, I added a variable
+// resolution mechanism that tracks declaration and assignment, and is used
+// to capture a side-field hash table of expression -> distance back up the
+// enclosing environments. However, the expression doesn't actually end up
+// being properly hashable with the addition of data to perturb the hash value,
+// and since it's only used on `variable` and `assign`, I've only shimmed in
+// a UUID to those two values. The java source relied on classes and Java
+// object ID's for hashing, which isn't replicated with the swift Struct/Enum
+// setup that I've created here. In hindsight, encoding that distance value
+// into the explicit expression, and making the internals a struct, would
+// make quite a bit more sense (and appears to be what Hashemi did in his
+// implementation).
 
 public indirect enum Unary: Hashable {
     case minus(Token)

@@ -18,9 +18,9 @@ extension Expression: CustomStringConvertible {
             return "( \(lhs) \(op) \(rhs) )"
         case let .grouping(exp):
             return "(group \(exp))"
-        case let .variable(tok):
+        case let .variable(tok, _):
             return "var(\(tok.lexeme))"
-        case let .assign(tok, exp):
+        case let .assign(tok, exp, _):
             return "\(tok.lexeme) = \(exp)"
         case let .logical(lhs, op, rhs):
             return "\(lhs) \(op) \(rhs)"
