@@ -121,6 +121,7 @@ public final class Environment: CustomStringConvertible {
         if let something = try enclosing?.get(name) {
             return something
         }
+        print("Attempting to get variable from any level of ancestor.")
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
 
@@ -130,6 +131,8 @@ public final class Environment: CustomStringConvertible {
                 return something
             }
         }
+        // extra verbose output before we through an error
+        print("Attempting to get variable \(name.lexeme) from ancestor at distance: \(distance)")
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
 
@@ -143,6 +146,8 @@ public final class Environment: CustomStringConvertible {
             } else {
                 // No enclosing environment, so we can't assign the variable - it was
                 // never defined, so we bail out here.
+                // extra verbose output before we through an error
+                print("No enclosing environment, so we can't assign the variable: \(name.lexeme)")
                 throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
             }
         }
@@ -682,6 +687,7 @@ public class Interpretter {
             if omgVerbose { indentPrint("> <ENV UPDATED TO \(environment) >") }
             return RuntimeValue.none
         } catch {
+            print("Attempting to assign the variable \(tok.lexeme), but it couldn't find one to assign...")
             throw RuntimeError.undefinedVariable(tok, message: "\(error)")
         }
     }
@@ -716,6 +722,7 @@ public class Interpretter {
             // if omgVerbose { indentPrint ("> <ENV GET \(token) <- \(value) >") }
             return try lookupVariable(expr, token)
         } catch {
+            print("Attempting to look up the variable \(token.lexeme), but it couldn't be found...")
             throw RuntimeError.undefinedVariable(token, message: "\(error)")
         }
     }

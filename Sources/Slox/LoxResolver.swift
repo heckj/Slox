@@ -134,6 +134,7 @@ public class Resolver {
         }
 
         scopes[scopes.count - 1][tok.lexeme] = false
+        if omgVerbose { indentPrint(String(describing:scopes)) }
     }
 
     private func define(_ tok: Token) {

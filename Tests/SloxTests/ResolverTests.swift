@@ -157,6 +157,59 @@ final class ResolverTests: XCTestCase {
 //        }
     }
 
+    
+    func testResolvingForLoop() throws {
+        let tokenlist = Slox.Scanner(LOXSource.chap11_4.source).scanTokens()
+        let parser = Parser(tokenlist)
+        // XTRA verboseness for debugging parsing
+        // parser.omgVerbose = true
+        print("Source: =====================")
+        print("\(LOXSource.chap11_4.source)")
+        print("=============================")
+        // var indention = 1
+        // for token in tokenlist {
+        //     print(String(repeating: " ", count: indention), terminator: "")
+        //     print("| \(token) |")
+        // indention += 1
+        // }
+        let statements = parser.parse()
+        XCTAssertEqual(parser.errors.count, 0, "expected 0 errors, found \(parser.errors.count)")
+        if parser.errors.count != 0 {
+            parser.printErrors()
+        }
+        // print("Retrieved statements:")
+        // for stmt in statements {
+        //     print("  \(stmt)")
+        // }
+        let resolver = Resolver(interpretter)
+        resolver.omgVerbose = true
+        try resolver.resolve(statements)
+        // interpretter.omgIndent = 0
+        // interpretter.omgVerbose = true
+        try interpretter.interpretStatements(statements)
+        // print("-----------------------------------------------------")
+        // print(interpretter.environment.values)
+        // print(interpretter.tickerTape as Any)
+
+        // base of 'clock'
+        // and added the function 'count' from the sample
+        let envKeys = interpretter.environment.values.keys
+        XCTAssertEqual(envKeys.count, 2)
+        XCTAssertNotNil(interpretter.environment.values["fib"])
+
+        // collected print statements should be 0 at the start
+        XCTAssertNotNil(interpretter.tickerTape)
+        if let collectedOutput = interpretter.tickerTape {
+            XCTAssertEqual(collectedOutput.count, 20)
+            // print(collectedOutput)
+            XCTAssertEqual(collectedOutput,
+                           ["0.0", "1.0", "1.0", "2.0", "3.0", "5.0",
+                            "8.0", "13.0", "21.0", "34.0", "55.0",
+                            "89.0", "144.0", "233.0", "377.0", "610.0",
+                            "987.0", "1597.0", "2584.0", "4181.0"])
+        }
+    }
+    
     func testResolvingFibonaci() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_8.source).scanTokens()
         let parser = Parser(tokenlist)
