@@ -39,9 +39,11 @@ public class Resolver {
             try declare(tok) // declare(stmt.name)
             switch expr {
             case .empty:
+                define(tok)
                 return
             default:
                 try resolve(expr)
+                define(tok)
             }
         case let .function(_, params, statements):
             beginScope()
@@ -76,6 +78,7 @@ public class Resolver {
         switch expr {
         case let .variable(tok, _):
             if !scopes.isEmpty, scopes.last?[tok.lexeme] == false {
+                if omgVerbose { indentPrint("Attempting to look up \(tok.lexeme) from \(scopes)") }
                 throw RuntimeError.readingVarInInitialization(tok, message: "Can't read local variable in its own initializer.")
             }
             resolveLocal(expr, tok)
@@ -104,9 +107,15 @@ public class Resolver {
 
     func resolveLocal(_ expr: Expression, _ name: Token) {
         // scopes.enumerated() // (index, element)
-        if omgVerbose { indentPrint("resolveLocal \(expr) \(name)") }
+        if omgVerbose {
+            indentPrint("resolveLocal \(expr) \(name)")
+            indentPrint("scopes currently: \(scopes)")
+        }
+        
         for (idx, scope) in scopes.reversed().enumerated() {
+            if omgVerbose { indentPrint("checking scope level \(idx) for \(name.lexeme)") }
             if scope.keys.contains(name.lexeme) {
+                if omgVerbose { indentPrint("resolving \(expr) through interpreter at distance \(idx).") }
                 interpretter.resolve(expr, idx)
             }
         }

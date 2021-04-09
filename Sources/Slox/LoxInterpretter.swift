@@ -133,6 +133,7 @@ public final class Environment: CustomStringConvertible {
         }
         // extra verbose output before we through an error
         print("Attempting to get variable \(name.lexeme) from ancestor at distance: \(distance)")
+        print(" .. ENV at distance: \(String(describing: ancestor(distance)))")
         throw RuntimeError.undefinedVariable(name, message: "Undefined variable '\(name.lexeme)'")
     }
 
@@ -356,6 +357,7 @@ public class Interpretter {
     func resolve(_ expr: Expression, _ depth: Int) {
         if omgVerbose { indentPrint("> resolving \(expr) against \(locals)") }
         locals[expr] = depth
+        if omgVerbose { indentPrint("> updated locals to: \(locals)") }
     }
 
     // MARK: Evaluate Expressions...

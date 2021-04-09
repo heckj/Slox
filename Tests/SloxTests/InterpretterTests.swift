@@ -80,32 +80,36 @@ final class IntepretterTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        let resolver = Resolver(interpretter)
-        interpretter.omgIndent = 0
-        interpretter.omgVerbose = true
-        try resolver.resolve(statements)
         // print("Retrieved statements:")
         // for stmt in statements {
         //     print("  \(stmt)")
         // }
+        
+        let resolver = Resolver(interpretter)
+        interpretter.omgIndent = 0
+        interpretter.omgVerbose = true
+        try resolver.resolve(statements)
+        print("Scopes: \(resolver.scopes)")
+        XCTAssertEqual(resolver.scopes.count, 0)
+        
+        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 4)
+
         try interpretter.interpretStatements(statements)
-//        print("-----------------------------------------------------")
-//        print(interpretter.environment.values)
-//        print(interpretter.tickerTape as Any)
+        print("-----------------------------------------------------")
+        print(interpretter.environment.values)
+        print(interpretter.tickerTape as Any)
 
         // base of 'clock'
         // and added the function 'count' from the sample
         let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["count"])
-
+        XCTAssertEqual(envKeys.count, 1)
+        
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 2)
+            XCTAssertEqual(collectedOutput.count, 0)
             // print(collectedOutput)
-            XCTAssertEqual(collectedOutput[0], "1.0")
-            XCTAssertEqual(collectedOutput[1], "2.0")
         }
     }
 

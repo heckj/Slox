@@ -176,16 +176,16 @@ final class ResolverTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-        // print("Retrieved statements:")
-        // for stmt in statements {
-        //     print("  \(stmt)")
-        // }
+         print("Retrieved statements:")
+         for stmt in statements {
+             print("  \(stmt)")
+         }
         let resolver = Resolver(interpretter)
         resolver.omgVerbose = true
+        interpretter.omgIndent = 0
+        interpretter.omgVerbose = true
         try resolver.resolve(statements)
-        // interpretter.omgIndent = 0
-        // interpretter.omgVerbose = true
-        try interpretter.interpretStatements(statements)
+        // try interpretter.interpretStatements(statements)
         // print("-----------------------------------------------------")
         // print(interpretter.environment.values)
         // print(interpretter.tickerTape as Any)
@@ -193,19 +193,19 @@ final class ResolverTests: XCTestCase {
         // base of 'clock'
         // and added the function 'count' from the sample
         let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["fib"])
+        XCTAssertEqual(envKeys.count, 1)
+        
+        print("Scopes: \(resolver.scopes)")
+        XCTAssertEqual(resolver.scopes.count, 0)
+        
+        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 4)
 
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 20)
+            XCTAssertEqual(collectedOutput.count, 0)
             // print(collectedOutput)
-            XCTAssertEqual(collectedOutput,
-                           ["0.0", "1.0", "1.0", "2.0", "3.0", "5.0",
-                            "8.0", "13.0", "21.0", "34.0", "55.0",
-                            "89.0", "144.0", "233.0", "377.0", "610.0",
-                            "987.0", "1597.0", "2584.0", "4181.0"])
         }
     }
 
