@@ -111,7 +111,7 @@ public class Resolver {
             indentPrint("resolveLocal \(expr) \(name)")
             indentPrint("scopes currently: \(scopes)")
         }
-        
+
         for (idx, scope) in scopes.reversed().enumerated() {
             if omgVerbose { indentPrint("checking scope level \(idx) for \(name.lexeme)") }
             if scope.keys.contains(name.lexeme) {

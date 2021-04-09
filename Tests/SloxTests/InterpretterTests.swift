@@ -84,14 +84,14 @@ final class IntepretterTests: XCTestCase {
         // for stmt in statements {
         //     print("  \(stmt)")
         // }
-        
+
         let resolver = Resolver(interpretter)
         interpretter.omgIndent = 0
         interpretter.omgVerbose = true
         try resolver.resolve(statements)
         print("Scopes: \(resolver.scopes)")
         XCTAssertEqual(resolver.scopes.count, 0)
-        
+
         print("Interpreter locals: \(interpretter.locals)")
         XCTAssertEqual(interpretter.locals.count, 4)
 
@@ -104,7 +104,7 @@ final class IntepretterTests: XCTestCase {
         // and added the function 'count' from the sample
         let envKeys = interpretter.environment.values.keys
         XCTAssertEqual(envKeys.count, 1)
-        
+
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {

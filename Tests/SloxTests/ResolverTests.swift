@@ -58,26 +58,24 @@ final class ResolverTests: XCTestCase {
     func testResolverWithVariousScopes() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap8_14.source).scanTokens()
         let parser = Parser(tokenlist)
-        // print("Source:")
-        // print("  \(LOXSource.chap8_14)")
+//         print("Source:")
+//         print("  \(LOXSource.chap8_14)")
         let statements = parser.parse()
         XCTAssertEqual(parser.errors.count, 0, "expected 0 errors, found \(parser.errors.count)")
         if parser.errors.count != 0 {
             parser.printErrors()
         }
         let resolver = Resolver(interpretter)
-        XCTAssertThrowsError(try resolver.resolve(statements), "Expected RuntimeError.readingVarInInitialization") { err in
-            if let rte = err as? RuntimeError {
-                switch rte {
-                case RuntimeError.readingVarInInitialization:
-                    return
-                default:
-                    XCTFail("Expected .incorrectArgumentCount error")
-                }
-            } else {
-                XCTFail("Expected RuntimeError error")
-            }
-        }
+//        interpretter.omgVerbose = true
+//        resolver.omgVerbose = true
+
+        try resolver.resolve(statements)
+
+//        print("Scopes: \(resolver.scopes)")
+        XCTAssertEqual(resolver.scopes.count, 0)
+
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 4)
     }
 
     func testResolverWithShadowedblock() throws {
@@ -133,28 +131,14 @@ final class ResolverTests: XCTestCase {
         // resolver.omgVerbose = true
         try resolver.resolve(statements)
 
-        print(resolver.scopes)
         // interpretter.omgIndent = 0
         // interpretter.omgVerbose = true
-//        try interpretter.interpretStatements(statements)
-//        print("-----------------------------------------------------")
-//        print(interpretter.environment.values)
-//        print(interpretter.tickerTape as Any)
+        // resolver.omgVerbose = true
 
-//        // base of 'clock'
-//        // and added the function 'count' from the sample
-//        let envKeys = interpretter.environment.values.keys
-//        XCTAssertEqual(envKeys.count, 2)
-//        XCTAssertNotNil(interpretter.environment.values["count"])
-//
-//        // collected print statements should be 0 at the start
-//        XCTAssertNotNil(interpretter.tickerTape)
-//        if let collectedOutput = interpretter.tickerTape {
-//            XCTAssertEqual(collectedOutput.count, 2)
-//            // print(collectedOutput)
-//            XCTAssertEqual(collectedOutput[0], "1.0")
-//            XCTAssertEqual(collectedOutput[1], "2.0")
-//        }
+        XCTAssertEqual(resolver.scopes.count, 0)
+
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 6)
     }
 
     func testResolvingForLoop() throws {
@@ -162,9 +146,9 @@ final class ResolverTests: XCTestCase {
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
         // parser.omgVerbose = true
-        print("Source: =====================")
-        print("\(LOXSource.chap11_4.source)")
-        print("=============================")
+//        print("Source: =====================")
+//        print("\(LOXSource.chap11_4.source)")
+//        print("=============================")
         // var indention = 1
         // for token in tokenlist {
         //     print(String(repeating: " ", count: indention), terminator: "")
@@ -176,37 +160,20 @@ final class ResolverTests: XCTestCase {
         if parser.errors.count != 0 {
             parser.printErrors()
         }
-         print("Retrieved statements:")
-         for stmt in statements {
-             print("  \(stmt)")
-         }
+//         print("Retrieved statements:")
+//         for stmt in statements {
+//             print("  \(stmt)")
+//         }
         let resolver = Resolver(interpretter)
-        resolver.omgVerbose = true
-        interpretter.omgIndent = 0
-        interpretter.omgVerbose = true
+//        resolver.omgVerbose = true
+//        interpretter.omgIndent = 0
+//        interpretter.omgVerbose = true
         try resolver.resolve(statements)
-        // try interpretter.interpretStatements(statements)
-        // print("-----------------------------------------------------")
-        // print(interpretter.environment.values)
-        // print(interpretter.tickerTape as Any)
 
-        // base of 'clock'
-        // and added the function 'count' from the sample
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 1)
-        
-        print("Scopes: \(resolver.scopes)")
         XCTAssertEqual(resolver.scopes.count, 0)
-        
-        print("Interpreter locals: \(interpretter.locals)")
-        XCTAssertEqual(interpretter.locals.count, 4)
 
-        // collected print statements should be 0 at the start
-        XCTAssertNotNil(interpretter.tickerTape)
-        if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 0)
-            // print(collectedOutput)
-        }
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 4)
     }
 
     func testResolvingFibonaci() throws {
@@ -214,9 +181,9 @@ final class ResolverTests: XCTestCase {
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
         // parser.omgVerbose = true
-        print("Source: =====================")
-        print("\(LOXSource.chap10_8.source)")
-        print("=============================")
+//        print("Source: =====================")
+//        print("\(LOXSource.chap10_8.source)")
+//        print("=============================")
         // var indention = 1
         // for token in tokenlist {
         //     print(String(repeating: " ", count: indention), terminator: "")
@@ -233,31 +200,14 @@ final class ResolverTests: XCTestCase {
         //     print("  \(stmt)")
         // }
         let resolver = Resolver(interpretter)
-        resolver.omgVerbose = true
+//        resolver.omgVerbose = true
+//        interpretter.omgIndent = 0
+//        interpretter.omgVerbose = true
         try resolver.resolve(statements)
-        // interpretter.omgIndent = 0
-        // interpretter.omgVerbose = true
-        try interpretter.interpretStatements(statements)
-        // print("-----------------------------------------------------")
-        // print(interpretter.environment.values)
-        // print(interpretter.tickerTape as Any)
 
-        // base of 'clock'
-        // and added the function 'count' from the sample
-        let envKeys = interpretter.environment.values.keys
-        XCTAssertEqual(envKeys.count, 2)
-        XCTAssertNotNil(interpretter.environment.values["fib"])
+        XCTAssertEqual(resolver.scopes.count, 0)
 
-        // collected print statements should be 0 at the start
-        XCTAssertNotNil(interpretter.tickerTape)
-        if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 20)
-            // print(collectedOutput)
-            XCTAssertEqual(collectedOutput,
-                           ["0.0", "1.0", "1.0", "2.0", "3.0", "5.0",
-                            "8.0", "13.0", "21.0", "34.0", "55.0",
-                            "89.0", "144.0", "233.0", "377.0", "610.0",
-                            "987.0", "1597.0", "2584.0", "4181.0"])
-        }
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 8)
     }
 }
