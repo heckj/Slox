@@ -67,8 +67,8 @@ final class IntepretterTests: XCTestCase {
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
         // parser.omgVerbose = true
-         print("Source:")
-         print("  \(LOXSource.chap11_4)")
+        print("Source:")
+        print("  \(LOXSource.chap11_4)")
         // var indention = 1
         // for token in tokenlist {
         //     print(String(repeating: " ", count: indention), terminator: "")
@@ -108,7 +108,7 @@ final class IntepretterTests: XCTestCase {
             XCTAssertEqual(collectedOutput[1], "2.0")
         }
     }
-    
+
     func testInterprettingCounterWithExplicitReturn() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)

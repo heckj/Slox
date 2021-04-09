@@ -399,6 +399,6 @@ public enum LOXSource {
         chap8_10, chap8_11, chap8_12, chap8_13, chap8_14,
         chap9_1, chap9_2, chap9_3,
         chap10_1, chap10_2, chap10_3, chap10_4, chap10_5, chap10_6, chap10_7, chap10_8, chap10_9,
-        chap11_1a, chap11_1b, chap11_2, chap11_4
+        chap11_1a, chap11_1b, chap11_2, chap11_4,
     ]
 }

@@ -157,7 +157,6 @@ final class ResolverTests: XCTestCase {
 //        }
     }
 
-    
     func testResolvingForLoop() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap11_4.source).scanTokens()
         let parser = Parser(tokenlist)
@@ -209,7 +208,7 @@ final class ResolverTests: XCTestCase {
                             "987.0", "1597.0", "2584.0", "4181.0"])
         }
     }
-    
+
     func testResolvingFibonaci() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_8.source).scanTokens()
         let parser = Parser(tokenlist)
