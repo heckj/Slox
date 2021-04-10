@@ -67,8 +67,8 @@ final class IntepretterTests: XCTestCase {
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
         // parser.omgVerbose = true
-        print("Source:")
-        print("  \(LOXSource.chap11_4)")
+//        print("Source:")
+//        print("  \(LOXSource.chap11_4)")
         // var indention = 1
         // for token in tokenlist {
         //     print(String(repeating: " ", count: indention), terminator: "")
@@ -86,21 +86,21 @@ final class IntepretterTests: XCTestCase {
         // }
 
         let resolver = Resolver(interpretter)
-        interpretter.omgIndent = 0
-        interpretter.omgVerbose = true
-        resolver.omgVerbose = true
+//        interpretter.omgIndent = 0
+//        interpretter.omgVerbose = true
+//        resolver.omgVerbose = true
         try resolver.resolve(statements)
         
-        print("POST RESOLVER OPERATION")
-        print("- Resolver Scopes: \(resolver.scopes)")
+//        print("POST RESOLVER OPERATION")
+//        print("- Resolver Scopes: \(resolver.scopes)")
         XCTAssertEqual(resolver.scopes.count, 0)
-        print("- Interpreter locals: \(interpretter.locals)")
+//        print("- Interpreter locals: \(interpretter.locals)")
         XCTAssertEqual(interpretter.locals.count, 4)
 
         try interpretter.interpretStatements(statements)
-        print("-----------------------------------------------------")
-        print(interpretter.environment.values)
-        print(interpretter.tickerTape as Any)
+//        print("-----------------------------------------------------")
+//        print(interpretter.environment.values)
+//        print(interpretter.tickerTape as Any)
 
         // base of 'clock'
         // and added the function 'count' from the sample
@@ -110,8 +110,13 @@ final class IntepretterTests: XCTestCase {
         // collected print statements should be 0 at the start
         XCTAssertNotNil(interpretter.tickerTape)
         if let collectedOutput = interpretter.tickerTape {
-            XCTAssertEqual(collectedOutput.count, 0)
+            XCTAssertEqual(collectedOutput.count, 20)
             // print(collectedOutput)
+            XCTAssertEqual(collectedOutput,
+                           ["0.0", "1.0", "2.0", "3.0", "4.0", "5.0",
+                            "6.0", "7.0", "8.0", "9.0", "10.0", "11.0",
+                            "12.0", "13.0", "14.0", "15.0", "16.0",
+                            "17.0", "18.0", "19.0"])
         }
     }
 
@@ -134,8 +139,8 @@ final class IntepretterTests: XCTestCase {
             parser.printErrors()
         }
         let resolver = Resolver(interpretter)
-        interpretter.omgIndent = 0
-        interpretter.omgVerbose = true
+//        interpretter.omgIndent = 0
+//        interpretter.omgVerbose = true
         try resolver.resolve(statements)
         // print("Retrieved statements:")
         // for stmt in statements {

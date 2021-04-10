@@ -18,7 +18,10 @@ extension Expression: CustomStringConvertible {
             return "( \(lhs) \(op) \(rhs) )"
         case let .grouping(exp):
             return "(group \(exp))"
-        case let .variable(tok, _):
+        case let .variable(tok, id):
+            let _ = id.uuidString.prefix(8)
+            // if you need to see the "ID" for each variable from the resolver:
+//            return "var(\(tok.lexeme):\(id.uuidString.prefix(8)))"
             return "var(\(tok.lexeme))"
         case let .assign(tok, exp, _):
             return "\(tok.lexeme) = \(exp)"

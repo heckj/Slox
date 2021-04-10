@@ -271,13 +271,19 @@ public class Interpretter {
     }
 
     private func executeVariableAssignment(_ token: Token, _ expr: Expression) throws {
-        if omgVerbose { indentPrint("> DEFINE VAR \(token)") }
+        if omgVerbose { indentPrint("> DEFINE VAR \(token) to \(expr)") }
 
         let val = try evaluate(expr)
         if let distance = locals[expr] {
+            if omgVerbose { indentPrint("Assigning \(token.lexeme) to value \(expr) at distance \(distance)") }
             try environment.assignAt(distance, token, val)
+            if omgVerbose { indentPrint("updated environment: \(environment)") }
+        } else {
+            environment.define(token.lexeme, value: val)
+            if omgVerbose { indentPrint("updated environment: \(environment)") }
         }
-        // environment.define(token.lexeme, value: val)
+        if omgVerbose { indentPrint("> FINISHING DEFINE VAR \(token) from \(expr)") }
+         
     }
 
     private func executeBlock(_ statements: [Statement], using: Environment) throws {
@@ -730,9 +736,12 @@ public class Interpretter {
     }
 
     private func lookupVariable(_ expr: Expression, _ name: Token) throws -> RuntimeValue {
+        if omgVerbose { indentPrint("Looking up variables for \(expr)")}
         if let distance = locals[expr] {
+            if omgVerbose { indentPrint("Found in locals hash at distance: \(distance), resolving from environment: \(environment)")}
             return try environment.getAt(distance, name)
         }
+        if omgVerbose { indentPrint("Not found in locals, resolving from the global environment")}
         return try globals.get(name)
     }
 
