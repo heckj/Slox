@@ -48,7 +48,7 @@ final class ParserTests: XCTestCase {
         XCTAssertEqual(String(describing: statements[3]), "VAR(IDENTIFIER[pi]):(3.14159)")
     }
 
-    func testParsingLogicalComparison() throws {
+    func testLogicalComparison() throws {
         let snippetOfPain = """
         if ((foo > 3) and (bar == 5)) {
             print "many";
@@ -69,7 +69,7 @@ final class ParserTests: XCTestCase {
         // }
     }
 
-    func testParsingForLoop() throws {
+    func testForLoop() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap9_2.source).scanTokens()
         let parser = Parser(tokenlist)
 //        // XTRA verboseness
@@ -96,7 +96,7 @@ final class ParserTests: XCTestCase {
         // }
     }
 
-    func testParsingFunctionWithReturnDeclaration() throws {
+    func testFuncWithReturnDeclaration() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness

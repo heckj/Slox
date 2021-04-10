@@ -55,7 +55,7 @@ final class ResolverTests: XCTestCase {
         XCTAssertEqual(resolver.scopes.count, 0)
     }
 
-    func testResolverWithVariousScopes() throws {
+    func testMultipleScopes() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap8_14.source).scanTokens()
         let parser = Parser(tokenlist)
 //         print("Source:")
@@ -78,7 +78,7 @@ final class ResolverTests: XCTestCase {
         XCTAssertEqual(interpretter.locals.count, 4)
     }
 
-    func testResolverWithShadowedblock() throws {
+    func testShadowedBlock() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap11_1a.source).scanTokens()
         let parser = Parser(tokenlist)
         // print("Source:")
@@ -105,7 +105,7 @@ final class ResolverTests: XCTestCase {
         }
     }
 
-    func testResolvingCounterWithExplicitReturn() throws {
+    func testCounterWithReturn() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
@@ -135,13 +135,11 @@ final class ResolverTests: XCTestCase {
         // interpretter.omgVerbose = true
         // resolver.omgVerbose = true
 
-        XCTAssertEqual(resolver.scopes.count, 0)
-
 //        print("Interpreter locals: \(interpretter.locals)")
         XCTAssertEqual(interpretter.locals.count, 6)
     }
 
-    func testResolvingForLoop() throws {
+    func testForLoop() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap11_4.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
@@ -176,7 +174,7 @@ final class ResolverTests: XCTestCase {
         XCTAssertEqual(interpretter.locals.count, 4)
     }
 
-    func testResolvingFibonaci() throws {
+    func testFibonaci() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_8.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing

@@ -25,7 +25,7 @@ final class IntepretterTests: XCTestCase {
         XCTAssertEqual(interpretter.tickerTape?.count, 0)
     }
 
-    func testInterpretterWithRuntimeError() throws {
+    func testRuntimeError() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_1.source).scanTokens()
         let parser = Parser(tokenlist)
         let statements = parser.parse()
@@ -62,7 +62,7 @@ final class IntepretterTests: XCTestCase {
         }
     }
 
-    func testInterprettingForLoop() throws {
+    func testForLoop() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap11_4.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
@@ -88,11 +88,13 @@ final class IntepretterTests: XCTestCase {
         let resolver = Resolver(interpretter)
         interpretter.omgIndent = 0
         interpretter.omgVerbose = true
+        resolver.omgVerbose = true
         try resolver.resolve(statements)
-        print("Scopes: \(resolver.scopes)")
+        
+        print("POST RESOLVER OPERATION")
+        print("- Resolver Scopes: \(resolver.scopes)")
         XCTAssertEqual(resolver.scopes.count, 0)
-
-        print("Interpreter locals: \(interpretter.locals)")
+        print("- Interpreter locals: \(interpretter.locals)")
         XCTAssertEqual(interpretter.locals.count, 4)
 
         try interpretter.interpretStatements(statements)
@@ -113,7 +115,7 @@ final class IntepretterTests: XCTestCase {
         }
     }
 
-    func testInterprettingCounterWithExplicitReturn() throws {
+    func testCounterWithReturn() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_7.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
@@ -139,6 +141,9 @@ final class IntepretterTests: XCTestCase {
         // for stmt in statements {
         //     print("  \(stmt)")
         // }
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 6)
+
         try interpretter.interpretStatements(statements)
 //        print("-----------------------------------------------------")
 //        print(interpretter.environment.values)
@@ -160,7 +165,7 @@ final class IntepretterTests: XCTestCase {
         }
     }
 
-    func testFibonaciInterpretterExecution() throws {
+    func testFibonaci() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap10_8.source).scanTokens()
         let parser = Parser(tokenlist)
         // XTRA verboseness for debugging parsing
@@ -184,6 +189,9 @@ final class IntepretterTests: XCTestCase {
         // }
         let resolver = Resolver(interpretter)
         try resolver.resolve(statements)
+
+//        print("Interpreter locals: \(interpretter.locals)")
+        XCTAssertEqual(interpretter.locals.count, 8)
         // interpretter.omgIndent = 0
         // interpretter.omgVerbose = true
         try interpretter.interpretStatements(statements)
