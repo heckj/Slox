@@ -402,7 +402,15 @@ public enum LOXSource {
         print DevonshireCream; // Prints "DevonshireCream".
         """,
         tokens: 16, statements: 2)
-    
+
+    public static var chap12_2 = LoxExample(
+        source: """
+        class Bagel {}
+        var bagel = Bagel();
+        print bagel; // Prints "Bagel instance".
+        """,
+        tokens: 15, statements: 3)
+
     public static var allExamples = [
         printSource, printComment, basicVariable, basicExpression, assignmentStatement,
         assignmentGroupedStatement, unaryComparison, comparisonPrint, logicalComparison,
@@ -411,6 +419,6 @@ public enum LOXSource {
         chap9_1, chap9_2, chap9_3,
         chap10_1, chap10_2, chap10_3, chap10_4, chap10_5, chap10_6, chap10_7, chap10_8, chap10_9,
         chap11_1a, chap11_1b, chap11_2, chap11_4,
-        chap12_1
+        chap12_1, chap12_2
     ]
 }

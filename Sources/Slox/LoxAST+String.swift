@@ -131,12 +131,18 @@ extension Statement: CustomStringConvertible {
 
 extension Callable: CustomStringConvertible {
     public var description: String {
-        return "<fn:\(arity)>"
+        switch type {
+        case .function:
+            return "<fn:\(arity)>"
+        case .klass:
+            return name
+        }
+        
     }
 }
 
-extension Klass: CustomStringConvertible {
-    public var description: String {
-        return name
-    }
-}
+//extension Klass: CustomStringConvertible {
+//    public var description: String {
+//        return name
+//    }
+//}

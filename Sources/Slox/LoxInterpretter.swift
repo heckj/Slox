@@ -49,7 +49,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
             return String(value)
         case let .callable(value):
             return value.description
-        case let .klass(value):
+        case let .instance(value):
             return value.description
         }
     }
@@ -58,7 +58,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     case number(_ value: Double)
     case boolean(_ value: Bool)
     case callable(_ value: Callable)
-    case klass(_ value: Klass)
+    case instance(_ value: KlassInstance)
     case none
 
     public var truthy: Bool {
@@ -164,14 +164,30 @@ public final class Environment: CustomStringConvertible {
 }
 
 public struct Callable {
+    // maybe a dumb idea:
+    enum CallableType {
+        case function
+        case klass
+    }
     public let name: String
+    let type: CallableType
     let arity: Int
     let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
 }
 
-public struct Klass {
-    let name: String
+// might not need to be a class - uncertain if we'll want reference or value semantics for it.
+public final class KlassInstance : CustomStringConvertible {
+    var klass: Callable
+    init(_ klass: Callable) {
+        self.klass = klass
+    }
+    public var description: String {
+        return "\(klass) instance"
+    }
 }
+//public struct Klass {
+//    let name: String
+//}
 
 private struct Return: Error {
     let value: RuntimeValue
@@ -200,12 +216,13 @@ public class Interpretter {
         globals = Environment()
         globals.define("clock",
                        value: .callable(
-                           Callable(name: "clock",
-                                    arity: 0,
-                                    call: {
-                                        (_, _) -> RuntimeValue in
-                                        RuntimeValue.number(Date().timeIntervalSince1970)
-                                    })
+                        Callable(name: "clock",
+                                 type: .function,
+                                arity: 0,
+                                call: {
+                                    (_, _) -> RuntimeValue in
+                                    RuntimeValue.number(Date().timeIntervalSince1970)
+                                })
                        ))
         environment = globals
         if collectOutput {
@@ -311,8 +328,19 @@ public class Interpretter {
 
     private func executeKlass(_ name: Token, _ statements: [Statement]) throws {
         environment.define(name.lexeme, value: .none)
-        let klass = Klass(name: name.lexeme)
-        try environment.assign(name, RuntimeValue.klass(klass))
+//        let klass = Klass(name: name.lexeme)
+        
+        let klass = Callable(name: name.lexeme, type: .klass, arity: 0) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+            
+            // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
+            // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
+            // where this is yet going.
+            let instance = KlassInstance(Callable(name: name.lexeme, type: .klass, arity: 0, call: { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+                return .none
+            }))
+            return RuntimeValue.instance(instance)
+        }
+        try environment.assign(name, RuntimeValue.callable(klass))
     }
     
     private func executeExpression(_ expr: Expression) throws {
@@ -343,7 +371,7 @@ public class Interpretter {
             if omgVerbose { omgIndent -= 2 }
         }
 
-        let function = Callable(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+        let function = Callable(name: name.lexeme, type: .function, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
             let closureEnv = Environment(enclosing: self.globals)
             // pair up the parameter names (variables) and arguments (values) and write them
             // into the environment created for executing this function.
@@ -721,14 +749,14 @@ public class Interpretter {
         switch unary {
         case let .minus(token):
             switch runtimeValue {
-            case .boolean(_), .string(_), .callable(_), .klass(_), .none:
+            case .boolean(_), .string(_), .callable(_), .instance(_), .none:
                 throw RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types")
             case let .number(value):
                 return RuntimeValue.number(-value)
             }
         case let .not(token):
             switch runtimeValue {
-            case .number(_), .string(_), .callable(_), .klass(_), .none:
+            case .number(_), .string(_), .callable(_), .instance(_), .none:
                 throw RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types")
             case let .boolean(value):
                 return RuntimeValue.boolean(!value)
