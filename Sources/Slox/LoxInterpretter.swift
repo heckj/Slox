@@ -16,7 +16,8 @@
 // Chapter 8: https://craftinginterpreters.com/statements-and-state.html
 // Chapter 9: https://craftinginterpreters.com/control-flow.html
 // Chapter 10: https://craftinginterpreters.com/functions.html
-// Chapter 11: https://craftinginterpreters.com/resolving-and-binding.html (PENDING)
+// Chapter 11: https://craftinginterpreters.com/resolving-and-binding.html
+// Chapter 12: https://craftinginterpreters.com/classes.html#properties-on-instances
 
 import Foundation
 
@@ -165,6 +166,18 @@ public final class Environment: CustomStringConvertible {
 
 public struct Callable {
     // maybe a dumb idea:
+    // the original source example in Java has Callable as an interface, which a class
+    // implements. Calling a class is instantiating it - returning a new class instance.
+    // There's a separate _thing_ (KlassInstance) for that which is a type of RuntimeValue,
+    // but for the factory of instances itself, I expanded Callable (the struct) to include
+    // a type of callable, made all the original stuff functions (since that's what this
+    // represented), and used the same mechanical structure to create a new instance instead.
+    // The instance is _supposed_ to have a reference back to its class (this callable), but
+    // that was hard to arrange with the way I used callable with closures, so I replicated a
+    // stupid version of it for now, that I'll probably have to refactor and actually fix.
+    
+    // Other implementations (Hashemi's at https://github1s.com/hashemi/slox/blob/HEAD/slox/Function.swift)
+    // made this a protocol and separate Function and Class structs to do the rest.
     enum CallableType {
         case function
         case klass
@@ -185,9 +198,6 @@ public final class KlassInstance : CustomStringConvertible {
         return "\(klass) instance"
     }
 }
-//public struct Klass {
-//    let name: String
-//}
 
 private struct Return: Error {
     let value: RuntimeValue
