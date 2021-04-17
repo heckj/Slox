@@ -35,6 +35,9 @@ public class Resolver {
             beginScope()
             try resolve(stmts)
             endScope()
+        case let .klass(name, _):
+            try declare(name)
+            define(name)
         case let .variable(tok, expr):
             try declare(tok) // declare(stmt.name)
             switch expr {

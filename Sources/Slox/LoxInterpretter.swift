@@ -49,6 +49,8 @@ public indirect enum RuntimeValue: CustomStringConvertible {
             return String(value)
         case let .callable(value):
             return value.description
+        case let .klass(value):
+            return value.description
         }
     }
 
@@ -56,6 +58,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     case number(_ value: Double)
     case boolean(_ value: Bool)
     case callable(_ value: Callable)
+    case klass(_ value: Klass)
     case none
 
     public var truthy: Bool {
@@ -166,6 +169,10 @@ public struct Callable {
     let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
 }
 
+public struct Klass {
+    let name: String
+}
+
 private struct Return: Error {
     let value: RuntimeValue
 }
@@ -228,6 +235,8 @@ public class Interpretter {
             try executeVariableAssignment(token, expr)
         case let .block(statements):
             try executeBlock(statements, using: Environment(enclosing: environment))
+        case let .klass(name, statements):
+            try executeKlass(name, statements)
         case let .expressionStatement(expr):
             try executeExpression(expr)
         case let .whileStatement(condition, body):
@@ -300,6 +309,12 @@ public class Interpretter {
         // if omgVerbose { indentPrint("> BLOCK COMPLETE w/ \(environment)") }
     }
 
+    private func executeKlass(_ name: Token, _ statements: [Statement]) throws {
+        environment.define(name.lexeme, value: .none)
+        let klass = Klass(name: name.lexeme)
+        try environment.assign(name, RuntimeValue.klass(klass))
+    }
+    
     private func executeExpression(_ expr: Expression) throws {
         // if omgVerbose { indentPrint("executeExpression(\(expr))") }
         if omgVerbose { indentPrint("> <EVALUATING: \(expr) >"); omgIndent += 1 }
@@ -706,14 +721,14 @@ public class Interpretter {
         switch unary {
         case let .minus(token):
             switch runtimeValue {
-            case .boolean(_), .string(_), .callable(_), .none:
+            case .boolean(_), .string(_), .callable(_), .klass(_), .none:
                 throw RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types")
             case let .number(value):
                 return RuntimeValue.number(-value)
             }
         case let .not(token):
             switch runtimeValue {
-            case .number(_), .string(_), .callable(_), .none:
+            case .number(_), .string(_), .callable(_), .klass(_), .none:
                 throw RuntimeError.typeMismatch(token, message: "not allowed to 'minus' these types")
             case let .boolean(value):
                 return RuntimeValue.boolean(!value)

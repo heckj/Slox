@@ -18,9 +18,12 @@ import Foundation
 
   program        → statement* EOF ;
 
-  declaration    → funDecl
+  declaration    → classDecl
+                 | funDecl
                  | varDecl
                  | statement ;
+
+  classDecl      → "class" IDENTIFIER "{" function* "}" ;
   funDecl        → "fun" function ;
   function       → IDENTIFIER "(" parameters? ")" block ;
   parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
@@ -69,6 +72,7 @@ public indirect enum Statement {
     case returnStatement(Token, Expression?)
     case variable(Token, Expression)
     case block([Statement])
+    case klass(Token, [Statement]) // statements are all function statements
     case ifStatement(Expression, Statement, Statement?)
     case whileStatement(Expression, Statement)
 }

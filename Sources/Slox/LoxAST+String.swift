@@ -123,6 +123,8 @@ extension Statement: CustomStringConvertible {
                 return "RETURN \(expr)"
             }
             return "RETURN none"
+        case let .klass(name, statements):
+            return "KLASS(\(name))(\(statements))"
         }
     }
 }
@@ -130,5 +132,11 @@ extension Statement: CustomStringConvertible {
 extension Callable: CustomStringConvertible {
     public var description: String {
         return "<fn:\(arity)>"
+    }
+}
+
+extension Klass: CustomStringConvertible {
+    public var description: String {
+        return name
     }
 }

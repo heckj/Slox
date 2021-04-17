@@ -103,6 +103,9 @@ class Parser {
                 if omgVerbose { indent(); print("fork -> VAR") }
                 return try variableDeclaration()
             }
+            if match(.CLASS) {
+                return try classDeclaration()
+            }
             if match(.FUN) {
                 if omgVerbose { indent(); print("fork -> FUN") }
                 return try functionDeclaration("function")
@@ -135,6 +138,17 @@ class Parser {
         return Statement.variable(variableToken, initializer)
     }
 
+    private func classDeclaration() throws -> Statement {
+        let name: Token = try consume(.IDENTIFIER, message: "Expect class name.")
+        try consume(.LEFT_BRACE, message: "Expect '{' before class body.")
+        var methods: [Statement] = []
+        while (!check(.RIGHT_BRACE) && !isAtEnd()) {
+            methods.append(try functionDeclaration("method"))
+        }
+        try consume(.RIGHT_BRACE, message: "Expect '}' after class body.")
+        return Statement.klass(name, methods)
+    }
+    
     private func functionDeclaration(_ kind: String) throws -> Statement {
         if omgVerbose { indent(); print("functionDeclaration()"); omgIndent += 1 }
         let name = try consume(.IDENTIFIER, message: "Expect \(kind) name.")
