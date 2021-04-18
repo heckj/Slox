@@ -4,3 +4,5 @@ Slox.xcodeproj/xcuserdata
 BuildTools/.build
 .build
 .swiftpm
+lcov.info
+coverage
