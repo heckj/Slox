@@ -33,6 +33,8 @@ extension Expression: CustomStringConvertible {
             return "_nil_"
         case let .get(expr, name):
             return "\(expr).GET(\(name))"
+        case let .set(obj, name, value):
+            return "\(obj).\(name) = \(value)"
         }
     }
 }

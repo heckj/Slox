@@ -107,6 +107,9 @@ public class Resolver {
             return
         case let .get(expr, _):
             try resolve(expr)
+        case let .set(obj, _, value):
+            try resolve(value)
+            try resolve(obj)
         }
     }
 

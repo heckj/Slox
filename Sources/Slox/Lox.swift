@@ -87,6 +87,8 @@ public enum Lox {
             print("PropertyError: \(token): \(message)")
         case let .undefinedProperty(token, message: message):
             print("PropertyError: \(token): \(message)")
+        case let .nonClassField(token, message: message):
+            print("PropertyError: \(token): \(message)")
         }
         hadRuntimeError = true
     }

@@ -40,6 +40,7 @@ public enum RuntimeError: Error {
     case duplicateVariable(_ token: Token, message: String = "")
     case nonClassProperty(_ token: Token, message: String = "")
     case undefinedProperty(_ token: Token, message: String = "")
+    case nonClassField(_ token: Token, message: String = "")
 }
 
 /// The form of value that evaluating from a LoxInterpretter returns. The source material choose to
@@ -206,7 +207,7 @@ public struct Klass : Callable, CustomStringConvertible {
 // might not need to be a class - uncertain if we'll want reference or value semantics for it.
 public final class KlassInstance : CustomStringConvertible {
     var klass: Klass
-    var map: [String:RuntimeValue] = [:]
+    var fields: [String:RuntimeValue] = [:]
     init(_ klass: Klass) {
         self.klass = klass
     }
@@ -214,10 +215,13 @@ public final class KlassInstance : CustomStringConvertible {
         return "\(klass) instance"
     }
     func get(_ name: Token) throws -> RuntimeValue {
-        guard let property = map[name.lexeme] else {
+        guard let property = fields[name.lexeme] else {
             throw RuntimeError.undefinedProperty(name, message: "Undefined property '\(name.lexeme)'.")
         }
         return property
+    }
+    func set(_ name: Token, _ value: RuntimeValue) {
+        fields[name.lexeme] = value
     }
 }
 
@@ -470,6 +474,17 @@ public class Interpretter {
             default:
                 throw RuntimeError.nonClassProperty(name, message: "Only instances have properties.")
             }
+        case let .set(obj, name, value):
+            let evalObj = try evaluate(obj)
+            switch evalObj {
+            case let .instance(instanceOf):
+                let val = try evaluate(value)
+                instanceOf.set(name, val)
+                return val
+            default:
+                throw RuntimeError.nonClassField(name, message: "Only instances have fields.")
+            }
+        
         }
     }
 

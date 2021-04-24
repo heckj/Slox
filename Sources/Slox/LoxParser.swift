@@ -360,6 +360,8 @@ class Parser {
             case let .variable(token, _):
                 if omgVerbose { indent(); print("Expression.assign"); omgIndent -= 1 }
                 return Expression.assign(token, value, UUID())
+            case let .get(obj, name):
+                return Expression.set(obj, name, value)
             default:
                 // We report an error if the left-hand side isn’t a valid assignment
                 // target, but we don’t throw it because the parser isn’t in a

@@ -80,7 +80,7 @@ public indirect enum Statement {
 public indirect enum Expression: Hashable {
     case literal(Literal)
     case logical(Expression, LogicalOperator, Expression)
-//    case set(Expression, Token, Expression)
+    case set(Expression, Token, Expression)
     case unary(Unary, Expression)
     case binary(Expression, Operator, Expression)
     case call(Expression, Token, [Expression])
