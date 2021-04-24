@@ -17,7 +17,7 @@
 // Chapter 9: https://craftinginterpreters.com/control-flow.html
 // Chapter 10: https://craftinginterpreters.com/functions.html
 // Chapter 11: https://craftinginterpreters.com/resolving-and-binding.html
-// Chapter 12: https://craftinginterpreters.com/classes.html#properties-on-instances
+// Chapter 12: https://craftinginterpreters.com/classes.html#methods-on-classes
 
 import Foundation
 
