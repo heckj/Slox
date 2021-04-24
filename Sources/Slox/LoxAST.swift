@@ -48,7 +48,7 @@ import Foundation
   block          → "{" declaration* "}" ;
 
   expression     → assignment ;
-  assignment     → IDENTIFIER "=" assignment
+  assignment     → ( call "." )? IDENTIFIER "=" assignment
                  | logic_or ;
   logic_or       → logic_and ( "or" logic_and )* ;
   logic_and      → equality ( "and" equality )* ;
@@ -57,7 +57,7 @@ import Foundation
   term           → factor ( ( "-" | "+" ) factor )* ;
   factor         → unary ( ( "/" | "*" ) unary )* ;
   unary          → ( "!" | "-" ) unary | call ;
-  call           → primary ( "(" arguments? ")" )* ;
+  call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
   arguments      → expression ( "," expression )* ;
   primary        → "true" | "false" | "nil"
                  | NUMBER | STRING
@@ -80,9 +80,11 @@ public indirect enum Statement {
 public indirect enum Expression: Hashable {
     case literal(Literal)
     case logical(Expression, LogicalOperator, Expression)
+//    case set(Expression, Token, Expression)
     case unary(Unary, Expression)
     case binary(Expression, Operator, Expression)
     case call(Expression, Token, [Expression])
+    case get(Expression, Token)
     case grouping(Expression)
     case variable(Token, UUID)
     case assign(Token, Expression, UUID)

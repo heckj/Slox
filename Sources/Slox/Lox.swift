@@ -83,6 +83,10 @@ public enum Lox {
             print("ResolverError: \(token): \(message)")
         case let .readingVarInInitialization(token, message: message):
             print("ResolverError: \(token): \(message)")
+        case let .nonClassProperty(token, message: message):
+            print("PropertyError: \(token): \(message)")
+        case let .undefinedProperty(token, message: message):
+            print("PropertyError: \(token): \(message)")
         }
         hadRuntimeError = true
     }

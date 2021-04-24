@@ -21,6 +21,12 @@
 
 import Foundation
 
+public protocol Callable: CustomStringConvertible {
+    var name: String { get }
+    var arity: Int { get }
+    var call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue { get }
+}
+
 public enum RuntimeError: Error {
     // Interpreter Errors
     case notImplemented
@@ -32,6 +38,8 @@ public enum RuntimeError: Error {
     // Resolver Errors
     case readingVarInInitialization(_ token: Token, message: String = "")
     case duplicateVariable(_ token: Token, message: String = "")
+    case nonClassProperty(_ token: Token, message: String = "")
+    case undefinedProperty(_ token: Token, message: String = "")
 }
 
 /// The form of value that evaluating from a LoxInterpretter returns. The source material choose to
@@ -164,7 +172,7 @@ public final class Environment: CustomStringConvertible {
     }
 }
 
-public struct Callable {
+public struct Function: Callable, CustomStringConvertible {
     // maybe a dumb idea:
     // the original source example in Java has Callable as an interface, which a class
     // implements. Calling a class is instantiating it - returning a new class instance.
@@ -178,24 +186,38 @@ public struct Callable {
     
     // Other implementations (Hashemi's at https://github1s.com/hashemi/slox/blob/HEAD/slox/Function.swift)
     // made this a protocol and separate Function and Class structs to do the rest.
-    enum CallableType {
-        case function
-        case klass
-    }
     public let name: String
-    let type: CallableType
-    let arity: Int
-    let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+    public let arity: Int
+    public let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+    public var description: String {
+        return "<fn:\(arity)>"
+    }
+}
+
+public struct Klass : Callable, CustomStringConvertible {
+    public let name: String
+    public var call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+    public let arity: Int = 0
+    public var description: String {
+        return name
+    }
 }
 
 // might not need to be a class - uncertain if we'll want reference or value semantics for it.
 public final class KlassInstance : CustomStringConvertible {
-    var klass: Callable
-    init(_ klass: Callable) {
+    var klass: Klass
+    var map: [String:RuntimeValue] = [:]
+    init(_ klass: Klass) {
         self.klass = klass
     }
     public var description: String {
         return "\(klass) instance"
+    }
+    func get(_ name: Token) throws -> RuntimeValue {
+        guard let property = map[name.lexeme] else {
+            throw RuntimeError.undefinedProperty(name, message: "Undefined property '\(name.lexeme)'.")
+        }
+        return property
     }
 }
 
@@ -226,8 +248,7 @@ public class Interpretter {
         globals = Environment()
         globals.define("clock",
                        value: .callable(
-                        Callable(name: "clock",
-                                 type: .function,
+                        Function(name: "clock",
                                 arity: 0,
                                 call: {
                                     (_, _) -> RuntimeValue in
@@ -340,12 +361,12 @@ public class Interpretter {
         environment.define(name.lexeme, value: .none)
 //        let klass = Klass(name: name.lexeme)
         
-        let klass = Callable(name: name.lexeme, type: .klass, arity: 0) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+        let klass = Klass(name: name.lexeme) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
             
             // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
             // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
             // where this is yet going.
-            let instance = KlassInstance(Callable(name: name.lexeme, type: .klass, arity: 0, call: { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+            let instance = KlassInstance(Klass(name: name.lexeme, call: { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
                 return .none
             }))
             return RuntimeValue.instance(instance)
@@ -381,7 +402,7 @@ public class Interpretter {
             if omgVerbose { omgIndent -= 2 }
         }
 
-        let function = Callable(name: name.lexeme, type: .function, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+        let function = Function(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
             let closureEnv = Environment(enclosing: self.globals)
             // pair up the parameter names (variables) and arguments (values) and write them
             // into the environment created for executing this function.
@@ -441,6 +462,14 @@ public class Interpretter {
             return try evaluateLogical(lhs, op, rhs)
         case let .call(callee, paren, arguments):
             return try evaluateCall(callee, paren, arguments)
+        case let .get(expr, name):
+            let obj = try evaluate(expr)
+            switch obj {
+            case let .instance(instanceOf):
+                return try instanceOf.get(name)
+            default:
+                throw RuntimeError.nonClassProperty(name, message: "Only instances have properties.")
+            }
         }
     }
 

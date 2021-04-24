@@ -10,27 +10,29 @@ import Foundation
 extension Expression: CustomStringConvertible {
     public var description: String {
         switch self {
-        case let .literal(exp):
-            return "\(exp)"
-        case let .unary(unaryexp, exp):
-            return "( \(unaryexp) \(exp) )"
+        case let .literal(expr):
+            return "\(expr)"
+        case let .unary(unaryexpr, expr):
+            return "( \(unaryexpr) \(expr) )"
         case let .binary(lhs, op, rhs):
             return "( \(lhs) \(op) \(rhs) )"
-        case let .grouping(exp):
-            return "(group \(exp))"
+        case let .grouping(expr):
+            return "(group \(expr))"
         case let .variable(tok, id):
             let _ = id.uuidString.prefix(8)
             // if you need to see the "ID" for each variable from the resolver:
 //            return "var(\(tok.lexeme):\(id.uuidString.prefix(8)))"
             return "var(\(tok.lexeme))"
-        case let .assign(tok, exp, _):
-            return "\(tok.lexeme) = \(exp)"
+        case let .assign(tok, expr, _):
+            return "\(tok.lexeme) = \(expr)"
         case let .logical(lhs, op, rhs):
             return "\(lhs) \(op) \(rhs)"
         case let .call(callee, paren, arguments):
             return "\(callee) \(paren) \(arguments)"
         case .empty:
             return "_nil_"
+        case let .get(expr, name):
+            return "\(expr).GET(\(name))"
         }
     }
 }
@@ -128,21 +130,3 @@ extension Statement: CustomStringConvertible {
         }
     }
 }
-
-extension Callable: CustomStringConvertible {
-    public var description: String {
-        switch type {
-        case .function:
-            return "<fn:\(arity)>"
-        case .klass:
-            return name
-        }
-        
-    }
-}
-
-//extension Klass: CustomStringConvertible {
-//    public var description: String {
-//        return name
-//    }
-//}

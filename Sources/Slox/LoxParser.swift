@@ -497,6 +497,9 @@ class Parser {
             if match(.LEFT_PAREN) {
                 if omgVerbose { indent(); print("fork -> finishCall()") }
                 expr = try finishCall(expr)
+            } else if match(.DOT) {
+                let name = try consume(.IDENTIFIER, message: "Expect property name after '.'.")
+                expr = Expression.get(expr, name)
             } else {
                 break
             }

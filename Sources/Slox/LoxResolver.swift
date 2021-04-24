@@ -105,6 +105,8 @@ public class Resolver {
             try resolve(expr)
         case .literal(_), .empty:
             return
+        case let .get(expr, _):
+            try resolve(expr)
         }
     }
 
