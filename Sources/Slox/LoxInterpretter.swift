@@ -184,7 +184,7 @@ public struct Function: Callable, CustomStringConvertible {
     // The instance is _supposed_ to have a reference back to its class (this callable), but
     // that was hard to arrange with the way I used callable with closures, so I replicated a
     // stupid version of it for now, that I'll probably have to refactor and actually fix.
-    
+
     // Other implementations (Hashemi's at https://github1s.com/hashemi/slox/blob/HEAD/slox/Function.swift)
     // made this a protocol and separate Function and Class structs to do the rest.
     public let name: String
@@ -195,7 +195,7 @@ public struct Function: Callable, CustomStringConvertible {
     }
 }
 
-public struct Klass : Callable, CustomStringConvertible {
+public struct Klass: Callable, CustomStringConvertible {
     public let name: String
     public var call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
     public let arity: Int = 0
@@ -205,21 +205,24 @@ public struct Klass : Callable, CustomStringConvertible {
 }
 
 // might not need to be a class - uncertain if we'll want reference or value semantics for it.
-public final class KlassInstance : CustomStringConvertible {
+public final class KlassInstance: CustomStringConvertible {
     var klass: Klass
-    var fields: [String:RuntimeValue] = [:]
+    var fields: [String: RuntimeValue] = [:]
     init(_ klass: Klass) {
         self.klass = klass
     }
+
     public var description: String {
         return "\(klass) instance"
     }
+
     func get(_ name: Token) throws -> RuntimeValue {
         guard let property = fields[name.lexeme] else {
             throw RuntimeError.undefinedProperty(name, message: "Undefined property '\(name.lexeme)'.")
         }
         return property
     }
+
     func set(_ name: Token, _ value: RuntimeValue) {
         fields[name.lexeme] = value
     }
@@ -252,12 +255,12 @@ public class Interpretter {
         globals = Environment()
         globals.define("clock",
                        value: .callable(
-                        Function(name: "clock",
-                                arity: 0,
-                                call: {
-                                    (_, _) -> RuntimeValue in
-                                    RuntimeValue.number(Date().timeIntervalSince1970)
-                                })
+                           Function(name: "clock",
+                                    arity: 0,
+                                    call: {
+                                        _, _ -> RuntimeValue in
+                                        RuntimeValue.number(Date().timeIntervalSince1970)
+                                    })
                        ))
         environment = globals
         if collectOutput {
@@ -344,7 +347,6 @@ public class Interpretter {
             if omgVerbose { indentPrint("updated environment: \(environment)") }
         }
         if omgVerbose { indentPrint("> FINISHING DEFINE VAR \(token) from \(expr)") }
-         
     }
 
     private func executeBlock(_ statements: [Statement], using: Environment) throws {
@@ -361,23 +363,23 @@ public class Interpretter {
         // if omgVerbose { indentPrint("> BLOCK COMPLETE w/ \(environment)") }
     }
 
-    private func executeKlass(_ name: Token, _ statements: [Statement]) throws {
+    private func executeKlass(_ name: Token, _: [Statement]) throws {
         environment.define(name.lexeme, value: .none)
 //        let klass = Klass(name: name.lexeme)
-        
-        let klass = Klass(name: name.lexeme) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
-            
+
+        let klass = Klass(name: name.lexeme) { (_: Interpretter, _: [RuntimeValue]) -> RuntimeValue in
+
             // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
             // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
             // where this is yet going.
-            let instance = KlassInstance(Klass(name: name.lexeme, call: { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
-                return .none
+            let instance = KlassInstance(Klass(name: name.lexeme, call: { (_: Interpretter, _: [RuntimeValue]) -> RuntimeValue in
+                .none
             }))
             return RuntimeValue.instance(instance)
         }
         try environment.assign(name, RuntimeValue.callable(klass))
     }
-    
+
     private func executeExpression(_ expr: Expression) throws {
         // if omgVerbose { indentPrint("executeExpression(\(expr))") }
         if omgVerbose { indentPrint("> <EVALUATING: \(expr) >"); omgIndent += 1 }
@@ -484,7 +486,6 @@ public class Interpretter {
             default:
                 throw RuntimeError.nonClassField(name, message: "Only instances have fields.")
             }
-        
         }
     }
 
@@ -833,12 +834,12 @@ public class Interpretter {
     }
 
     private func lookupVariable(_ expr: Expression, _ name: Token) throws -> RuntimeValue {
-        if omgVerbose { indentPrint("Looking up variables for \(expr)")}
+        if omgVerbose { indentPrint("Looking up variables for \(expr)") }
         if let distance = locals[expr] {
-            if omgVerbose { indentPrint("Found in locals hash at distance: \(distance), resolving from environment: \(environment)")}
+            if omgVerbose { indentPrint("Found in locals hash at distance: \(distance), resolving from environment: \(environment)") }
             return try environment.getAt(distance, name)
         }
-        if omgVerbose { indentPrint("Not found in locals, resolving from the global environment")}
+        if omgVerbose { indentPrint("Not found in locals, resolving from the global environment") }
         return try globals.get(name)
     }
 

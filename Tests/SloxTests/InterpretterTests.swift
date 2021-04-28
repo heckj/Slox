@@ -90,7 +90,7 @@ final class IntepretterTests: XCTestCase {
 //        interpretter.omgVerbose = true
 //        resolver.omgVerbose = true
         try resolver.resolve(statements)
-        
+
 //        print("POST RESOLVER OPERATION")
 //        print("- Resolver Scopes: \(resolver.scopes)")
         XCTAssertEqual(resolver.scopes.count, 0)
@@ -222,7 +222,7 @@ final class IntepretterTests: XCTestCase {
                             "987.0", "1597.0", "2584.0", "4181.0"])
         }
     }
-    
+
     func testBasicClass() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap12_1.source).scanTokens()
         let parser = Parser(tokenlist)
@@ -272,7 +272,7 @@ final class IntepretterTests: XCTestCase {
                            ["DevonshireCream"])
         }
     }
-    
+
     func testInstantiateClass() throws {
         let tokenlist = Slox.Scanner(LOXSource.chap12_2.source).scanTokens()
         let parser = Parser(tokenlist)

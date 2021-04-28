@@ -19,7 +19,7 @@ extension Expression: CustomStringConvertible {
         case let .grouping(expr):
             return "(group \(expr))"
         case let .variable(tok, id):
-            let _ = id.uuidString.prefix(8)
+            _ = id.uuidString.prefix(8)
             // if you need to see the "ID" for each variable from the resolver:
 //            return "var(\(tok.lexeme):\(id.uuidString.prefix(8)))"
             return "var(\(tok.lexeme))"
