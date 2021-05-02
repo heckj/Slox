@@ -24,7 +24,7 @@ import Foundation
 public protocol Callable: CustomStringConvertible {
     var name: String { get }
     var arity: Int { get }
-    func call(_:Interpretter, _:[RuntimeValue]) throws -> RuntimeValue
+    func call(_: [RuntimeValue]) throws -> RuntimeValue
 }
 
 public enum RuntimeError: Error {
@@ -174,41 +174,30 @@ public final class Environment: CustomStringConvertible {
 }
 
 public struct Function: Callable, CustomStringConvertible {
-    // maybe a dumb idea:
-    // the original source example in Java has Callable as an interface, which a class
-    // implements. Calling a class is instantiating it - returning a new class instance.
-    // There's a separate _thing_ (KlassInstance) for that which is a type of RuntimeValue,
-    // but for the factory of instances itself, I expanded Callable (the struct) to include
-    // a type of callable, made all the original stuff functions (since that's what this
-    // represented), and used the same mechanical structure to create a new instance instead.
-    // The instance is _supposed_ to have a reference back to its class (this callable), but
-    // that was hard to arrange with the way I used callable with closures, so I replicated a
-    // stupid version of it for now, that I'll probably have to refactor and actually fix.
-
-    // Other implementations (Hashemi's at https://github1s.com/hashemi/slox/blob/HEAD/slox/Function.swift)
-    // made this a protocol and separate Function and Class structs to do the rest.
     public let name: String
     public let arity: Int
-    let body: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
-    public func call(_ i: Interpretter, _ args: [RuntimeValue]) throws -> RuntimeValue {
-        try body(i, args)
+    let body: ([RuntimeValue]) throws -> RuntimeValue
+
+    public func call(_ args: [RuntimeValue]) throws -> RuntimeValue {
+        try body(args)
     }
+
     public var description: String {
-        return "<fn:\(arity)>"
+        return "<fn:\(name):\(arity)>"
     }
 }
 
 public struct Klass: Callable, CustomStringConvertible {
     public let name: String
     public let arity: Int = 0
-    public func call(_: Interpretter, _: [RuntimeValue]) throws -> RuntimeValue {
+    public func call(_: [RuntimeValue]) throws -> RuntimeValue {
         // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
         // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
         // where this is yet going.
         let instance = KlassInstance(Klass(name: name))
         return RuntimeValue.instance(instance)
     }
-    
+
     public var description: String {
         return name
     }
@@ -267,8 +256,7 @@ public class Interpretter {
                        value: .callable(
                            Function(name: "clock",
                                     arity: 0,
-                                    body: {
-                                        _, _ -> RuntimeValue in
+                                    body: { _ -> RuntimeValue in
                                         RuntimeValue.number(Date().timeIntervalSince1970)
                                     })
                        ))
@@ -407,7 +395,7 @@ public class Interpretter {
             if omgVerbose { omgIndent -= 2 }
         }
 
-        let function = Function(name: name.lexeme, arity: params.count) { (_: Interpretter, arguments: [RuntimeValue]) -> RuntimeValue in
+        let function = Function(name: name.lexeme, arity: params.count) { (arguments: [RuntimeValue]) -> RuntimeValue in
             let closureEnv = Environment(enclosing: self.globals)
             // pair up the parameter names (variables) and arguments (values) and write them
             // into the environment created for executing this function.
@@ -512,7 +500,7 @@ public class Interpretter {
         }
 
         // if omgVerbose { indentPrint("> call w/ \(environment)") }
-        return try function.call(self, argumentValues)
+        return try function.call(argumentValues)
     }
 
     private func evaluateLogical(_ lhs: Expression, _ op: LogicalOperator, _ rhs: Expression) throws -> RuntimeValue {
