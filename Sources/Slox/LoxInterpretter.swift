@@ -24,7 +24,7 @@ import Foundation
 public protocol Callable: CustomStringConvertible {
     var name: String { get }
     var arity: Int { get }
-    var call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue { get }
+    func call(_:Interpretter, _:[RuntimeValue]) throws -> RuntimeValue
 }
 
 public enum RuntimeError: Error {
@@ -189,7 +189,10 @@ public struct Function: Callable, CustomStringConvertible {
     // made this a protocol and separate Function and Class structs to do the rest.
     public let name: String
     public let arity: Int
-    public let call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+    let body: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
+    public func call(_ i: Interpretter, _ args: [RuntimeValue]) throws -> RuntimeValue {
+        try body(i, args)
+    }
     public var description: String {
         return "<fn:\(arity)>"
     }
@@ -197,8 +200,15 @@ public struct Function: Callable, CustomStringConvertible {
 
 public struct Klass: Callable, CustomStringConvertible {
     public let name: String
-    public var call: (Interpretter, [RuntimeValue]) throws -> RuntimeValue
     public let arity: Int = 0
+    public func call(_: Interpretter, _: [RuntimeValue]) throws -> RuntimeValue {
+        // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
+        // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
+        // where this is yet going.
+        let instance = KlassInstance(Klass(name: name))
+        return RuntimeValue.instance(instance)
+    }
+    
     public var description: String {
         return name
     }
@@ -257,7 +267,7 @@ public class Interpretter {
                        value: .callable(
                            Function(name: "clock",
                                     arity: 0,
-                                    call: {
+                                    body: {
                                         _, _ -> RuntimeValue in
                                         RuntimeValue.number(Date().timeIntervalSince1970)
                                     })
@@ -365,18 +375,7 @@ public class Interpretter {
 
     private func executeKlass(_ name: Token, _: [Statement]) throws {
         environment.define(name.lexeme, value: .none)
-//        let klass = Klass(name: name.lexeme)
-
-        let klass = Klass(name: name.lexeme) { (_: Interpretter, _: [RuntimeValue]) -> RuntimeValue in
-
-            // this may be stupid - I'm not sure what we're doing yet with the guts of the instance, so I made it a
-            // callable thingy for starters, an instance of KlassInstance that has within it a callable. Unclear
-            // where this is yet going.
-            let instance = KlassInstance(Klass(name: name.lexeme, call: { (_: Interpretter, _: [RuntimeValue]) -> RuntimeValue in
-                .none
-            }))
-            return RuntimeValue.instance(instance)
-        }
+        let klass = Klass(name: name.lexeme)
         try environment.assign(name, RuntimeValue.callable(klass))
     }
 
