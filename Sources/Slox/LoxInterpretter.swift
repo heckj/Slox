@@ -5,7 +5,7 @@
 //  Created by Joseph Heck on 3/7/21.
 //
 
-// Other versions of this in swift that are worth looking at for comparsions:
+// Other versions of this in swift that are worth looking at for comparisons:
 // * [alexito4/slox](https://github.com/alexito4/slox)
 // * [eirikvaa/slox](https://github.com/eirikvaa/slox)
 // * [danielctull/slox](https://github.com/danielctull/lox)
@@ -87,7 +87,7 @@ public indirect enum RuntimeValue: CustomStringConvertible {
     }
 }
 
-// MARK: Internal Interpretter Data Structures
+// MARK: Internal Interpreter Data Structures
 
 public final class Environment: CustomStringConvertible {
     var values: [String: RuntimeValue] = [:]
@@ -231,7 +231,7 @@ private struct Return: Error {
     let value: RuntimeValue
 }
 
-// MARK: Interpretter
+// MARK: Interpreter
 
 public class Interpretter {
     let globals: Environment
